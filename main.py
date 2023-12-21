@@ -3,13 +3,13 @@ import os
 from dotenv import load_dotenv
 
 import asyncio
-from discord.ext import commands
 import re 
 import colorama
+from discord.ext import commands
 from colorama import Fore
 import cloudcord
 from discord import Color
-
+import random
 intents = discord.Intents.all()
 
 
@@ -33,7 +33,6 @@ async def on_member_join(member):
 #
 
 #
-
 
 
 
