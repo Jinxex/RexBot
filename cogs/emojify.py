@@ -1,12 +1,13 @@
-
 from discord.commands import slash_command
 from discord.ext import commands
+
+
 class Emojify(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.emojified_texts = {} 
+        self.emojified_texts = {}
 
-    @slash_command(description='📊 × Starte eine emojify text!')
+    @slash_command(description="📊 × Starte eine emojify text!")
     async def emojify(self, ctx, *, text):
         emoji_text = ""
 
@@ -20,8 +21,8 @@ class Emojify(commands.Cog):
 
         await ctx.respond(emoji_text)
 
-
         self.emojified_texts[ctx.author.id] = emoji_text
+
 
 def setup(bot):
     bot.add_cog(Emojify(bot))

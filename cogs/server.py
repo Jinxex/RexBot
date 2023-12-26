@@ -20,10 +20,7 @@ class serverinfo(commands.Cog):
 
     info = SlashCommandGroup("info")
 
-    @info.command(
-        name="server",
-        description="Zeigt Informationen Ã¼ber den server an."
-    )
+    @info.command(name="server", description="Zeigt Informationen Ã¼ber den server an.")
     async def _server(self, ctx: discord.Interaction):
         guild = ctx.guild
         name = str(ctx.guild.name)
@@ -38,24 +35,46 @@ class serverinfo(commands.Cog):
         role_count = len(ctx.guild.roles)
         emoji_count = len(ctx.guild.emojis)
 
-        embed = discord.Embed(
-            title=f"Server Information",
-            color=discord.Color.blue()
+        embed = discord.Embed(title=f"Server Information", color=discord.Color.blue())
+        embed.add_field(
+            name=":crown: Owner", value=f"```{ctx.guild.owner}```", inline=False
         )
-        embed.add_field(name=':crown: Owner', value=f'```{ctx.guild.owner}```', inline=False)
-        embed.add_field(name=":people_hugging: Members", value=f"```{memberCount}```", inline=True)
-        embed.add_field(name=":robot: Bots", value=f"```{sum(member.bot for member in ctx.guild.members)}```",
-                        inline=True)
+        embed.add_field(
+            name=":people_hugging: Members", value=f"```{memberCount}```", inline=True
+        )
+        embed.add_field(
+            name=":robot: Bots",
+            value=f"```{sum(member.bot for member in ctx.guild.members)}```",
+            inline=True,
+        )
         embed.add_field(name=":id: Server ID", value=f"```{id}```", inline=False)
-        embed.add_field(name=":calendar: Created", value=f"```{ctx.guild.created_at.__format__('%d.%m.%Y')}```",
-                        inline=False)
-        embed.add_field(name=":pencil2: Text Channels", value=f"```{text_channels}```", inline=True)
-        embed.add_field(name=":microphone2: Voice Channels", value=f"```{voice_channels}```", inline=True)
-        embed.add_field(name=":gem: Categories", value=f"```{categories}```", inline=True)
+        embed.add_field(
+            name=":calendar: Created",
+            value=f"```{ctx.guild.created_at.__format__('%d.%m.%Y')}```",
+            inline=False,
+        )
+        embed.add_field(
+            name=":pencil2: Text Channels", value=f"```{text_channels}```", inline=True
+        )
+        embed.add_field(
+            name=":microphone2: Voice Channels",
+            value=f"```{voice_channels}```",
+            inline=True,
+        )
+        embed.add_field(
+            name=":gem: Categories", value=f"```{categories}```", inline=True
+        )
         embed.add_field(name=":shield: Roles", value=f"```{role_count}```", inline=True)
-        embed.add_field(name=":sparkles: Boosts", value=f"```{ctx.guild.premium_tier}```", inline=True)
-        embed.add_field(name=":chart_with_upwards_trend: Boost Level",
-                        value=f"```{ctx.guild.premium_subscription_count}```", inline=True)
+        embed.add_field(
+            name=":sparkles: Boosts",
+            value=f"```{ctx.guild.premium_tier}```",
+            inline=True,
+        )
+        embed.add_field(
+            name=":chart_with_upwards_trend: Boost Level",
+            value=f"```{ctx.guild.premium_subscription_count}```",
+            inline=True,
+        )
         await ctx.respond(embed=embed)
 
 

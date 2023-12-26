@@ -22,26 +22,23 @@ class Modal(discord.ui.Modal):
     def __init__(self, bot, *args, **kwargs):
         self.bot = bot
         super().__init__(
-            discord.ui.InputText(
-                label="Embed Titel",
-                placeholder="Titel reinscheiben"
-            ),
+            discord.ui.InputText(label="Embed Titel", placeholder="Titel reinscheiben"),
             discord.ui.InputText(
                 label="Embed Beschreibung",
                 placeholder="Text reinschreiben",
-                style=discord.InputTextStyle.long
+                style=discord.InputTextStyle.long,
             ),
             discord.ui.InputText(
                 label="Embed Thumbnail",
                 placeholder="Thumbnail URL eintragen, ansonsten leer lassen",
                 style=discord.InputTextStyle.short,
-                required=False
+                required=False,
             ),
             discord.ui.InputText(
                 label="Embed Image",
                 placeholder="Image URL eintragen, ansonsten leer lassen",
                 style=discord.InputTextStyle.short,
-                required=False
+                required=False,
             ),
             discord.ui.InputText(
                 label="Channel ID",
@@ -49,14 +46,14 @@ class Modal(discord.ui.Modal):
                 style=discord.InputTextStyle.short,
             ),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     async def callback(self, interaction):
         embed = discord.Embed(
             title=self.children[0].value,
             description=self.children[1].value,
-            color=discord.Color.green()
+            color=discord.Color.green(),
         )
         thumbnail = self.children[2].value
         image = self.children[3].value
@@ -67,4 +64,7 @@ class Modal(discord.ui.Modal):
         embed.set_image(url=image)
 
         await channel.send(embed=embed)
-        await interaction.response.send_message(f"Embed erfolgreich in {channel.mention} erstellt und gesendet!", ephemeral=True)
+        await interaction.response.send_message(
+            f"Embed erfolgreich in {channel.mention} erstellt und gesendet!",
+            ephemeral=True,
+        )
