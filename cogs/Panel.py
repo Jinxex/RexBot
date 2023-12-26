@@ -4,16 +4,13 @@ from discord.ext import commands
 import asyncio
 import datetime
 import aiosqlite
-import json
-import sqlite3
+import time  
 
 class PunishSystem(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-
-
-    @slash_command(name="punish", description="Dauert noch..")
+    @slash_command(name="admin", description="Achtung der User wird immer für 24 Stunden timeout!")
     @discord.default_permissions(administrator=True, kick_members=True)
     async def punish(self, ctx, user: discord.Member, reason: str):
         overview_embed = discord.Embed(
@@ -27,7 +24,7 @@ class PunishSystem(commands.Cog):
         overview_embed.add_field(name="Was willst du mit ihm machen?", value=f" ", inline=False)
         overview_embed.set_thumbnail(url=user.avatar.url)
         overview_embed.set_footer(text=f"Timestamp: {datetime.datetime.utcnow()}")
-        await ctx.respond(embed=overview_embed, view=PunishView(reason, user), ephemeral=True)
+        await ctx.respond(embed=overview_embed, view=PunishView(reason, user, timeout=86400), ephemeral=True)
         await asyncio.sleep(10)
         await ctx.delete()
 
@@ -35,12 +32,11 @@ class PunishSystem(commands.Cog):
 
 
 class PunishView(discord.ui.View):
-    def __init__(self, reason, user):
+    def __init__(self, reason, user, timeout=86400):
         super().__init__()
         self.reason = reason
         self.user = user
-        print(self.user)
-        print(self.reason)
+        self.timeout = timeout
 
     @discord.ui.button(label="Ban", style=discord.ButtonStyle.red, custom_id="ban",
                        emoji="<a:banbutton:1086650068368633916>")
@@ -105,6 +101,34 @@ class PunishView(discord.ui.View):
             await asyncio.sleep(5)
             await interaction.delete_original_response()
 
+
+    @discord.ui.button(label="timout", style=discord.ButtonStyle.blurple, custom_id="timeout",
+                   emoji="<:icon_bestrafung_timeout:987644033784483890>")
+    async def timeout(self, button: discord.ui.Button, interaction: discord.Interaction):
+        if self.user.guild_permissions.kick_members:
+            await interaction.response.send_message("Du kannst keine Moderatoren timeout geben", ephemeral=True)
+            await asyncio.sleep(5)
+            await interaction.delete_original_response()
+            return
+
+        if self.user.id == interaction.user.id:
+            await interaction.response.send_message("Du kannst dich nicht selbst timeout geben!", ephemeral=True)
+            await asyncio.sleep(5)
+            await interaction.delete_original_response()
+            return
+
+        if interaction.user.top_role.position < self.user.top_role.position:
+            await interaction.response.send_message("Du kannst keinen Nutzer timeout geben, der eine höhere Rolle hat als du!", ephemeral=True)
+            await asyncio.sleep(5)
+            await interaction.delete_original_response()
+            return
+        until = datetime.datetime.utcnow() + datetime.timedelta(seconds=self.timeout)
+        
+        await self.user.timeout(reason=self.reason, until=until)
+        
+        await interaction.response.send_message(f"{self.user.mention} wurde timeout für `{self.reason}`", ephemeral=True)
+        await asyncio.sleep(5)
+        await interaction.delete_original_response()
 
 
 def setup(bot):
