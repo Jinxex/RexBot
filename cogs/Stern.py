@@ -379,6 +379,23 @@ class stern(cloudcord.Cog, emoji="⭐"):
         embed.set_thumbnail(url=ctx.author.display_avatar.url)
         await ctx.respond(embed=embed)
 
+    @stern.command()
+    async def balance(self, ctx ,member: Option(discord.Member)= None):
+        member = member or ctx.author
+        user_id = member.id
+
+        current_stern = await db.get_stern(user_id)
+        Konto = await db.get_konto(user_id)
+
+        embed_balance = discord.Embed(
+            title=f"{member.name}'s Stern-Balance",
+            description=f"Aktuelle Sterne: {current_stern}\nStern-Konto: {Konto}",
+            color=discord.Color.blue(),
+        )
+        embed_balance.set_thumbnail(url=member.display_avatar.url)
+        await ctx.respond(embed=embed_balance)
+        
+    
 
 
 def setup(bot):
