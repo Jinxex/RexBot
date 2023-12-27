@@ -18,7 +18,7 @@ class sternDB(cloudcord.DBHandler):
             user_id INTEGER PRIMARY KEY,
             stern INTEGER DEFAULT 0,
             streak INTEGER DEFAULT 0,
-            Konto INTEGER DEFAULT 0,
+            Konto INTEGER DEFAULT 0
             )"""
         )
 
@@ -130,7 +130,7 @@ class stern(cloudcord.Cog, emoji="⭐"):
         embed = discord.Embed(
             title="Tägliche stern", description=message, color=discord.Color.yellow()
         )
-
+        embed.set_thumbnail(url=ctx.author.display_avatar.url)
         embed.set_footer(text=f"Du hast nun {total_stern + current_stern} stern ⭐")
 
         await ctx.respond(embed=embed)
@@ -148,6 +148,7 @@ class stern(cloudcord.Cog, emoji="⭐"):
                 description="Bruder aber warum versuchst du, dich selbst oder den Bot zu bestehlen?",
                 color=discord.Color.red(),
             )
+            embed.set_thumbnail(url=ctx.author.display_avatar.url)
             await ctx.respond(embed=embed, ephemeral=True)
             return
 
@@ -176,6 +177,7 @@ class stern(cloudcord.Cog, emoji="⭐"):
         embed_victim.set_footer(
             text=f"Du hast nun {max(0, total_stern_victim - stolen_stern)} stern ⭐"
         )
+        embed.set_thumbnail(url=ctx.author.display_avatar.url)
 
         await ctx.respond(embed=embed_stealer)
         await ctx.respond(embed=embed_victim)
@@ -220,6 +222,7 @@ class stern(cloudcord.Cog, emoji="⭐"):
                 description=f"{ctx.author.mention} hat {amount} stern  an {member.mention} gegeben ⭐!",
                 color=discord.Color.yellow(),
             )
+            embed_sender.set_thumbnail(url=ctx.author.display_avatar.url)
             embed_sender.add_field(name="Grund", value=description)
 
         await db.subtract_stern(ctx.author.id, amount)
@@ -240,78 +243,79 @@ class stern(cloudcord.Cog, emoji="⭐"):
                 description="Dann mach es so schnell wie möglich /daily. Dann bist du bei uns registriert und hast Spaß mit deiner stern.",
                 color=discord.Color.red(),
             )
+            embed.set_thumbnail(url=ctx.author.display_avatar.url)
             await ctx.respond(embed=embed)
             return
 
         stern = int(stern)
-        sterns_good = min(10, stern + random.randint(1, 7))
-        sterns_not_good = max(0, min(30, stern - random.randint(1, 7)))
+        Sterne_good = min(10, stern + random.randint(1, 7))
+        Sterne_not_good = max(0, min(30, stern - random.randint(1, 7)))
         goodordosent = random.randint(1, 2)
         user = ctx.guild.members
         eventgood = [
-            f"Du hast eine Packung sterns auf der Straße gefunden du hast dich umgeschaut ob dich jemand "
-            f"beobachtet... Als du festgestellt hat das dich niemand beobachtet hast du Lachend alle "
-            f"sterns mitgenommen es waren **{sterns_good}** sterns.",
-            f"Du hast im Aldilie eine stern "
+            f"Du hast eine Packung Sterne auf der Straße gefunden du hast dich umgeschaut ob dich jemand ⭐"
+            f"beobachtet... Als du festgestellt hat das dich niemand beobachtet hast du Lachend alle⭐ "
+            f"Sterne mitgenommen es waren **{Sterne_good}** Sterne.",
+            f"Du hast im Aldilie eine stern ⭐ "
             f"Packung geklaut allerdings hat dich "
             f"der Ladenbesitzer erwischt. Aber da "
-            f"er mitleid hatte hast du "
-            f"**{sterns_good}** sterns bekommen.",
-            f"Du hast auf Onlysterns ein neues Video hochgeladen du wurdest allerdings gehackt aber du "
-            f"konntest trozdem **{sterns_good}** sterns bekommen.",
-            f"Du hast einer Alten Oma über die Straße geholfen. Aus ihrer Tasche sind wärendesen {sterns_good}"
-            f" sterns gefallen. Du hast alle vor ihren Augen eingesammelt und bist abgehauen.",
+            f"er mitleid hatte hast du ⭐ "
+            f"**{Sterne_good}** Sterne bekommen. ⭐",
+            f"Du hast auf OnlySterne ein neues Video hochgeladen du wurdest allerdings gehackt aber du "
+            f"konntest trozdem **{Sterne_good}** Sterne bekommen. ⭐",
+            f"Du hast einer Alten Oma über die Straße geholfen. Aus ihrer Tasche sind wärendesen {Sterne_good}"
+            f" Sterne gefallen. Du hast alle vor ihren Augen eingesammelt und bist abgehauen. ⭐",
             f"Du bist nach Hause gegangen und hast im Müll etwas stern Artiges gesehen du hast geschaut "
-            f"und es waren tatsächlich **{sterns_good}** sterns im Müll du hollst alle raus und hast "
-            f"jetzt **{sterns_good}** sterns mehr, da {sterns_good - 2} schlecht waren.",
-            f"Du hast deine sterns gezählt wie jeden morgen weil am Tag vorher {random.choice(user)} da "
-            f"war. Dann hast du festgestellt das sie/er/es dir **{sterns_good}** dagelassen hat",
+            f"und es waren tatsächlich **{Sterne_good}** Sterne im Müll du hollst alle raus und hast ⭐"
+            f"jetzt **{Sterne_good}** Sterne mehr, da {Sterne_good - 2} schlecht waren. ⭐",
+            f"Du hast deine Sterne gezählt wie jeden morgen weil am Tag vorher {random.choice(user)} da "
+            f"war. Dann hast du festgestellt das sie/er/es dir **{Sterne_good}** dagelassen hat ⭐",
             f"Du bist in den Wald gegangen und hast dort eine Kiste gefunden. In der Kiste waren "
-            f"**{sterns_good}** sterns. Du hast sie genommen und bist abgehauen",
-            f"Jemand hat dir **{sterns_good}** sterns geschenkt. Du hast dich gefreut und hast sie genommen",
-            f"Jemand hat dich gefragt ob du **{sterns_good}** sterns haben willst oder ob er jemand anderen "
-            f"doppelt geben soll. Du hast gesagt das du die sterns haben willst und hast sie bekommen",
-            f"Eine Person hat dir **{sterns_good}** sterns geschenkt. Du hast dich gefreut und hast sie "
-            f"genommen",
-            f"Im Internet hast du eine Seite gefunden in der behauptet wurde das du **{sterns_good}** sterns "
-            f"bekommen kannst. Du hast dich angemeldet und hast die sterns bekommen",
-            f"In der Schule hast du einen stern gebacken und hast ihn mitgenommen. Als du ihn essen "
-            f"wolltest hast du festgestellt das es **{sterns_good}** sterns waren",
-            f"Die Oma die vorne an der Kasse war hat **{sterns_good}** sterns verloren. Du hast sie "
-            f"aufgelesen und hast sie genommen",
+            f"**{Sterne_good}** Sterne. Du hast sie genommen und bist abgehauen ⭐",
+            f"Jemand hat dir **{Sterne_good}** Sterne geschenkt. Du hast dich gefreut und hast sie genommen ⭐",
+            f"Jemand hat dich gefragt ob du **{Sterne_good}** Sterne haben willst oder ob er jemand anderen ⭐ "
+            f"doppelt geben soll. Du hast gesagt das du die Sterne haben willst und hast sie bekommen ⭐",
+            f"Eine Person hat dir **{Sterne_good}** Sterne geschenkt. Du hast dich gefreut und hast sie "
+            f"genommen ⭐",
+            f"Im Internet hast du eine Seite gefunden in der behauptet wurde das du **{Sterne_good}** Sterne ⭐ "
+            f"bekommen kannst. Du hast dich angemeldet und hast die Sterne bekommen",
+            f"In der Schule hast du einen stern gebacken und hast ihn mitgenommen. Als du ihn essen ⭐ "
+            f"wolltest hast du festgestellt das es **{Sterne_good}** Sterne waren⭐",
+            f"Die Oma die vorne an der Kasse war hat **{Sterne_good}** Sterne verloren. Du hast sie "
+            f"aufgelesen und hast sie genommen⭐",
         ]
 
         eventnotgood = [
             f"Du hast Elon Musk nach Twitter+ gefragt, er hatte dich mit seinem Waschbeken beworfen "
-            f"und dir sind **{sterns_not_good}** sterns zerbrochen.",
-            f"Du hast das neue Cyberpunk 2089 "
-            f"gekauft allerdings ist es voller Bugs "
+            f"und dir sind **{Sterne_not_good}** Sterne zerbrochen.⭐",
+            f"Du hast das neue Cyberpunk 2089⭐ "
+            f"gekauft allerdings ist es voller Bugs"
             f"und du ragest und zerbichst "
-            f"**{sterns_not_good}** sterns dabei.",
+            f"**{Sterne_not_good}** Sterne dabei.⭐",
             f"Du hast im Aldilie eine stern Packung geklaut allerdings hat dich der Ladenbesitzer "
-            f"erwischt. Er hat dich verklagt und du musstest **{sterns_not_good}** sterns strafe zahlen.",
-            f"Du bist auf den Bürgersteig hingefallen da du noch sterns in deiner Hosentasche hattest "
-            f"sind **{sterns_not_good}** sterns rausgerollt und wurden von einem Auto überfahren",
-            f"Du hast deine sterns gezählt wie jeden morgen weil am Tag vorher {random.choice(user)} "
-            f"da war. Dann hast du festgestellt das sie/er/es dir **{sterns_not_good}** hinterhältig geklaut "
-            f"hat!",
+            f"erwischt. Er hat dich verklagt und du musstest **{Sterne_not_good}** Sterne strafe zahlen. ⭐",
+            f"Du bist auf den Bürgersteig hingefallen da du noch Sterne in deiner Hosentasche hattest ⭐"
+            f"sind **{Sterne_not_good}** Sterne rausgerollt und wurden von einem Auto überfahren ⭐",
+            f"Du hast deine Sterne gezählt wie jeden morgen weil am Tag vorher {random.choice(user)} ⭐ "
+            f"da war. Dann hast du festgestellt das sie/er/es dir **{Sterne_not_good}** hinterhältig geklaut "
+            f"hat!⭐",
             f"Du bist zu McDonalds gegangen und hast dir einen McFlurry geholt. Als du "
-            f"zurückkamst war dein McFlurry weg und du hast **{sterns_not_good}** sterns verloren.",
-            f"{random.choice(user)} hat dir **{sterns_not_good}** sterns geklaut. Allerdings ist er "
-            f"gestollpert und alle sind zerbrochen",
-            f"Etwas hat dir **{sterns_not_good}** sterns geklaut. Du hast es nicht gesehen aber du hast "
+            f"zurückkamst war dein McFlurry weg und du hast **{Sterne_not_good}** Sterne verloren.⭐",
+            f"{random.choice(user)} hat dir **{Sterne_not_good}** Sterne geklaut. Allerdings ist er "
+            f"gestollpert und alle sind zerbrochen⭐",
+            f"Etwas hat dir **{Sterne_not_good}** Sterne geklaut. Du hast es nicht gesehen aber du hast "
             f"festgestellt das es ein Hund war. Du hast dich gefreut das es ein Hund war und hast "
-            f"ihn weitergefüttert",
-            f"Deine Mutter hat dir **{sterns_not_good}** sterns geklaut. Du hast sie gefragt warum sie das "
+            f"ihn weitergefüttert⭐",
+            f"Deine Mutter hat dir **{Sterne_not_good}** Sterne geklaut. Du hast sie gefragt warum sie das  "
             f"getan hat. Sie hat gesagt das sie es für dich getan hat weil sie dich liebt. Du hast "
             f"dir gedacht das sie es für sich selbst getan hat und hast sie verprügelt "
-            f"(that escalated quickly)",
-            f"Alle deine sterns sind in der Waschmaschine gelandet. Du hast sie rausgeholt und alle "
-            f"**{sterns_not_good}** sterns waren kaputt",
-            f"Im Internet hast du eine Seite gefunden in der behauptet wurde das du **{sterns_not_good}** "
-            f"sterns bekommen kannst. Du hast dich angemeldet und wurdest gescammt",
-            f"Oben auf dem Dach hast du eine Kiste gefunden. In der Kiste waren **{sterns_not_good}** sterns. "
-            f"Du hast sie genommen und hast sie runtergeworfen. Sie sind alle kaputt gegangen",
+            f"(that escalated quickly)⭐",
+            f"Alle deine Sterne sind in der Waschmaschine gelandet. Du hast sie rausgeholt und alle "
+            f"**{Sterne_not_good}** Sterne waren kaputt⭐",
+            f"Im Internet hast du eine Seite gefunden in der behauptet wurde das du **{Sterne_not_good}** ⭐"
+            f"Sterne bekommen kannst. Du hast dich angemeldet und wurdest gescammt⭐",
+            f"Oben auf dem Dach hast du eine Kiste gefunden. In der Kiste waren **{Sterne_not_good}** Sterne. ⭐ "
+            f"Du hast sie genommen und hast sie runtergeworfen. Sie sind alle kaputt gegangen⭐",
         ]
         sternembed = discord.Embed(
             title=f"{ctx.author.name} HAT stern!",
@@ -324,24 +328,28 @@ class stern(cloudcord.Cog, emoji="⭐"):
             description=random.choice(eventgood),
             color=discord.Color.yellow(),
         )
+        
+        eventgoodembed.set_thumbnail(url=ctx.author.display_avatar.url)
+        
 
         eventnotgoodembed = discord.Embed(
             title=f"{ctx.author.name} ist etwas **Schlechtes** passiert...",
             description=random.choice(eventnotgood),
             color=discord.Color.red(),
         )
+        eventnotgoodembed.set_thumbnail(url=ctx.author.display_avatar.url)
         if int(stern) == 60:
             await ctx.respond(embed=sternembed)
             return
         if goodordosent == 1:
             await ctx.respond(embed=eventgoodembed)
-            Neue_stern = stern + sterns_good
+            Neue_stern = stern + Sterne_good
             await db.execute(
                 "UPDATE users SET stern = ? WHERE user_id = ?",
                 (Neue_stern, ctx.author.id),
             )
             return
-        Neue_stern2 = stern - sterns_not_good
+        Neue_stern2 = stern - Sterne_not_good
         await db.execute(
             "UPDATE users SET stern  = ? WHERE user_id = ?",
             (Neue_stern2, ctx.author.id),
@@ -368,6 +376,7 @@ class stern(cloudcord.Cog, emoji="⭐"):
             description=f"Sie haben erfolgreich {amount} stern auf Ihr Konto überwiesen!",
             color=discord.Color.yellow(),
         )
+        embed.set_thumbnail(url=ctx.author.display_avatar.url)
         await ctx.respond(embed=embed)
 
 
