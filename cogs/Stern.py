@@ -7,7 +7,6 @@ import asyncio
 from discord.ext import commands
 from datetime import datetime
 
-
 class sternDB(cloudcord.DBHandler):
     def __init__(self):
         super().__init__("stern.db")
@@ -48,8 +47,9 @@ class sternDB(cloudcord.DBHandler):
 
     async def update_streak(self, user_id, streak):
         await self.execute(
-            "UPDATE users SET streak = ? WHERE user_id = ?", (streak, user_id)
+            "UPDATE users SET streak = ? WHERE user_id = ?", (streak or 0, user_id)
         )
+
 
     async def reset_streak(self, user_id):
         await self.execute("UPDATE users SET streak = 0 WHERE user_id = ?", user_id)
@@ -68,9 +68,10 @@ class sternDB(cloudcord.DBHandler):
 
     async def check_streak(self, user_id):
         return (
-            await self.one("SELECT streak > 0 FROM users WHERE user_id = ?", user_id)
+            await self.one("SELECT streak FROM users WHERE user_id = ? AND streak > 0", user_id)
             or False
         )
+
 
     async def add_stern(self, user_id, stern=0, to_account=False):
         async with self.start() as cursor:
@@ -97,43 +98,66 @@ class sternDB(cloudcord.DBHandler):
         )
 
 
+    async def get_max_streak(self, user_id):
+        return await self.one("SELECT MAX(streak) FROM users WHERE user_id = ?", user_id) or 0
+    
+    async def add_bonus_stern(self, user_id, bonus_stern):
+        await self.execute(
+            "UPDATE users SET stern = stern + ? WHERE user_id = ?", (bonus_stern, user_id)
+        )
+
+
+
 db = sternDB()
 
 
 class stern(cloudcord.Cog, emoji="⭐"):
     stern = SlashCommandGroup("stern", description="Lass dich von niemandem bestehlen⭐")
 
-    # /daily commmad
-
-    @stern.command(description="holt dir eine Belohnung ab")
-    @commands.cooldown(1, 86400, commands.BucketType.user)
+    @stern.command(description="Holt dir eine Belohnung ab")
     async def daily(self, ctx):
         user_id = ctx.user.id
 
         current_streak = await db.get_streak(user_id)
         current_stern = random.randint(1, 60)
 
-        if current_streak > 0 and await db.check_streak(user_id):
+        if current_stern > 0 and await db.check_streak(user_id):
             current_streak += 1
             await db.update_streak(user_id, current_streak)
-            message = f"Tägliche stern\nDu hast dir **{current_stern}** stern abgeholt! Sehr schmackhaft\n\nStreak: {current_streak} Tage - Streak beibehalten"
+
+            if current_streak >= 12:  
+                min_bonus_sterne = 10  
+                max_bonus_sterne = 30 
+
+                bonus_sterne = random.randint(min_bonus_sterne, max_bonus_sterne)
+
+                await db.add_bonus_stern(user_id, bonus_sterne)
+
+                current_stern += bonus_sterne
+                message = f"Tägliche Sterne\nDu hast dir **{current_stern - bonus_sterne}** Sterne abgeholt und einen Bonus von **{bonus_sterne}** Sternen erhalten! Sehr schmackhaft\n\nStreak: {current_streak} Tage + Streak beibehalten - Bonus Sterne: {bonus_sterne}"
+            else:
+                message = f"Tägliche Sterne\nDu hast dir **{current_stern}** Sterne abgeholt! Sehr schmackhaft\n\nStreak: {current_streak} Tage + Streak beibehalten"
         else:
             await db.reset_streak(user_id)
             current_streak = 1
             await db.update_streak(user_id, current_streak)
-            message = f"Tägliche stern\nDu hast dir **{current_stern}** stern abgeholt! Sehr schmackhaft\n\nStreak: {current_streak} Tag - Streak verloren"
+            message = f"Tägliche Sterne\nDu hast dir **{current_stern}** Sterne abgeholt! Sehr schmackhaft\n\nStreak: {current_streak} Tag - Streak verloren"
 
         total_stern = await db.get_stern(user_id)
         await db.add_stern(user_id, current_stern)
         await db.close()
 
         embed = discord.Embed(
-            title="Tägliche stern", description=message, color=discord.Color.yellow()
+            title="Tägliche Sterne", 
+            description=message, 
+            color=discord.Color.yellow()
         )
+        embed.add_field(name=f"Du hast nun {total_stern + current_stern} Sterne ⭐", value=" ")
         embed.set_thumbnail(url=ctx.author.display_avatar.url)
-        embed.set_footer(text=f"Du hast nun {total_stern + current_stern} stern ⭐")
 
         await ctx.respond(embed=embed)
+
+
 
     # /steal commmad
 
@@ -252,6 +276,7 @@ class stern(cloudcord.Cog, emoji="⭐"):
         Sterne_not_good = max(0, min(30, stern - random.randint(1, 7)))
         goodordosent = random.randint(1, 2)
         user = ctx.guild.members
+        current_stern = await db.get_stern(ctx.author.id)
         eventgood = [
             f"Du hast eine Packung Sterne auf der Straße gefunden du hast dich umgeschaut ob dich jemand ⭐"
             f"beobachtet... Als du festgestellt hat das dich niemand beobachtet hast du Lachend alle⭐ "
@@ -319,22 +344,21 @@ class stern(cloudcord.Cog, emoji="⭐"):
         ]
         sternembed = discord.Embed(
             title=f"{ctx.author.name} HAT stern!",
-            description="Du hast Absofort " "stern...",
+            description=f"Du hast Absofort " "stern...\n\nDu hast jetzt {current_stern}",
             color=discord.Color.red(),
         )
 
         eventgoodembed = discord.Embed(
             title=f"{ctx.author.name} ist etwas **gutes** passiert...",
-            description=random.choice(eventgood),
+            description=f"{random.choice(eventgood)}\n\nDu hast jetzt {current_stern + Sterne_good} ⭐",
             color=discord.Color.yellow(),
         )
-        
+
         eventgoodembed.set_thumbnail(url=ctx.author.display_avatar.url)
-        
 
         eventnotgoodembed = discord.Embed(
             title=f"{ctx.author.name} ist etwas **Schlechtes** passiert...",
-            description=random.choice(eventnotgood),
+            description=f"{random.choice(eventnotgood)}\n\nDu hast jetzt {current_stern - Sterne_not_good} ⭐",
             color=discord.Color.red(),
         )
         eventnotgoodembed.set_thumbnail(url=ctx.author.display_avatar.url)
@@ -380,22 +404,30 @@ class stern(cloudcord.Cog, emoji="⭐"):
         await ctx.respond(embed=embed)
 
     @stern.command()
-    async def balance(self, ctx ,member: Option(discord.Member)= None):
+    async def balance(self, ctx, member: Option(discord.Member) = None):
         member = member or ctx.author
         user_id = member.id
 
         current_stern = await db.get_stern(user_id)
+        print(current_stern)
         Konto = await db.get_konto(user_id)
+        streak = await db.get_streak(user_id)
+        print(streak)
+        max_streak = await db.get_max_streak(user_id)
 
         embed_balance = discord.Embed(
             title=f"{member.name}'s Stern-Balance",
-            description=f"Aktuelle Sterne: {current_stern}\nStern-Konto: {Konto}",
             color=discord.Color.blue(),
         )
+        embed_balance.add_field(name="⭐ Sterne", value=f"```{current_stern}```", inline=True)
+        embed_balance.add_field(name="📈 Streak", value=f"```{streak}```", inline=True)
+        embed_balance.add_field(  
+            name="📊 Maximaler Streak", 
+            value=f"```{max_streak}```",
+            inline=False
+         )
         embed_balance.set_thumbnail(url=member.display_avatar.url)
         await ctx.respond(embed=embed_balance)
-        
-    
 
 
 def setup(bot):
