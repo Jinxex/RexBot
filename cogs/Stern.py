@@ -11,6 +11,7 @@ class sternDB(cloudcord.DBHandler):
     def __init__(self):
         super().__init__("stern.db")
 
+
     async def setup(self):
         await self.execute(
             """CREATE TABLE IF NOT EXISTS users(
@@ -20,6 +21,7 @@ class sternDB(cloudcord.DBHandler):
             Konto INTEGER DEFAULT 0
             )"""
         )
+
 
     # db
     async def add_stern(self, user_id, stern=0):
@@ -115,11 +117,12 @@ class stern(cloudcord.Cog, emoji="⭐"):
     stern = SlashCommandGroup("stern", description="Lass dich von niemandem bestehlen⭐")
 
     @stern.command(description="Holt dir eine Belohnung ab")
+    @commands.cooldown(1, 86400, commands.BucketType.user)
     async def daily(self, ctx):
         user_id = ctx.user.id
 
         current_streak = await db.get_streak(user_id)
-        current_stern = random.randint(1, 60)
+        current_stern = random.randint(1, 10)
 
         if current_stern > 0 and await db.check_streak(user_id):
             current_streak += 1
@@ -162,49 +165,51 @@ class stern(cloudcord.Cog, emoji="⭐"):
     # /steal commmad
 
     @stern.command(
-        description="Oh je, wenn du den Befehl befolgst, wirst du nie Freunde finden☹"
-    )
+    description="Oh je, wenn du den Befehl befolgst, wirst du nie Freunde finden☹"
+)
     @commands.cooldown(1, 7200, commands.BucketType.user)
     async def steal(self, ctx, member: Option(discord.Member)):
-        if member.id == ctx.author.id or member.id == ctx.bot.user.id:
-            embed = discord.Embed(
-                title="**Bruder warum**",
-                description="Bruder aber warum versuchst du, dich selbst oder den Bot zu bestehlen?",
+        required_stern = 20
+        user_stern = await db.get_stern(ctx.author.id)
+        if user_stern < required_stern:
+            embed_not_enough_stern = discord.Embed(
+                title="Nicht genügend Sterne!",
+                description=f"Du benötigst mindestens {required_stern} Sterne, um diesen Befehl auszuführen.",
                 color=discord.Color.red(),
             )
+            embed_not_enough_stern.set_thumbnail(url=ctx.author.display_avatar.url)
+            await ctx.respond(embed=embed_not_enough_stern, ephemeral=True)
+            return
+
+        # Der Benutzer hat genügend Sterne, um den Befehl auszuführen
+        if member.id == ctx.author.id:
+            stolen_stern = random.randint(1, 30)
+            total_stern_stealer = await db.get_stern(ctx.author.id)
+
+            embed = discord.Embed(
+                title="**Wer hat die Sterne aus dem Himmel geklaut?**",
+                description=f"Du hast {stolen_stern} Sterne aus dem Himmel geklaut und direkt verspeist.\n\n",
+                color=discord.Color.yellow(),
+            )
+            embed.add_field(name=f"Du hast nun {total_stern_stealer - stolen_stern} Sterne ⭐")
             embed.set_thumbnail(url=ctx.author.display_avatar.url)
             await ctx.respond(embed=embed, ephemeral=True)
             return
 
-        success_chance = random.randint(1, 30)
-        stolen_stern = random.randint(1, 100)
+        if member.id == ctx.bot.user.id:
+            stolen_stern = random.randint(1, 5)
         total_stern_stealer = await db.get_stern(ctx.author.id)
-        total_stern_victim = await db.get_stern(member.id)
 
-        await db.subtract_stern(member.id, stolen_stern)
-        await db.add_stern(ctx.author.id, stolen_stern)
-
-        embed_stealer = discord.Embed(
-            title="stern Diebstahl!",
-            description=f"Du hast {stolen_stern} ⭐ von {member.mention} geklaut!",
-            color=discord.Color.yellow(),
-        )
-        embed_stealer.set_footer(
-            text=f"Du hast nun {total_stern_stealer + stolen_stern} stern ⭐"
-        )
-
-        embed_victim = discord.Embed(
-            title="stern Diebstahl!",
-            description=f"Deine stern wurde von {ctx.author.mention} gestohlen! 😢",
+        embed = discord.Embed(
+            title="**Ganz schön mutig!**",
+            description=f"Du hast versucht, Sterne vom Meister der Sterne zu stehlen!\n\n"
+                        f"Leider wurdest du erwischt und musst {stolen_stern} Strafe zahlen.\n\n"
+                        f"Du hast noch {total_stern_stealer - stolen_stern:.3f} Sterne übrig.",
             color=discord.Color.red(),
         )
-        embed_victim.set_footer(
-            text=f"Du hast nun {max(0, total_stern_victim - stolen_stern)} stern ⭐"
-        )
         embed.set_thumbnail(url=ctx.author.display_avatar.url)
-
-        await ctx.respond(embed=embed_stealer)
-        await ctx.respond(embed=embed_victim)
+        await ctx.respond(embed=embed, ephemeral=True)
+        return
 
     # /give commmad
 
