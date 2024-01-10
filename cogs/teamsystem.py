@@ -6,7 +6,6 @@ import cloudcord
 
 
 class ranks(cloudcord.Cog, emoji="🌩"):
-    print("test")
     team = SlashCommandGroup("team", description="Lass dich von niemandem bestehlen⭐")
 
     @team.command(name="uprank", description="Gib einem User einen Uprank!")

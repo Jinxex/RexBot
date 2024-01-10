@@ -40,7 +40,7 @@ class WelcomeCard(commands.Cog):
                 )
 
             await db.commit()
-            await ctx.respond(f"✅ Welcome channel set to {channel.mention}")
+            await ctx.respond(f"✅ Welcome channel set to {channel.mention}", ephemeral=True)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -63,7 +63,7 @@ class WelcomeCard(commands.Cog):
                         icon_url=member.guild.icon.url, name=member.guild.name
                     )
                     embed.set_image(
-                        url="https://tse4.mm.bing.net/th?id=OIP.zMe7JYEU-Rgv3G9prVh8CQHaCX&pid=Api&P=0&h=180"
+                        url="https://media.discordapp.net/attachments/1190258623511789603/1192734854073299095/dy1QM5M.png?ex=65aa27e5&is=6597b2e5&hm=480032919b01d512a06c30e4319680ef2f0b2dbbb3af1b4047dc7e5a09fc3957&=&format=webp&quality=lossless&width=1246&height=701"
                     )
 
                     await channel.send(member.mention, embed=embed)

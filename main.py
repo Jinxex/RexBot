@@ -16,7 +16,7 @@ intents = discord.Intents.all()
 
 bot = cloudcord.Bot(
     intents=intents,
-    debug_guilds=[1183612004829761597],
+    debug_guilds=[1190258614640836659],
 )
 
 
@@ -37,7 +37,9 @@ async def on_member_join(member):
 async def on_ready():
     await bot.change_presence(
         activity=discord.Activity(
-            type=discord.ActivityType.watching, name=f" Zu Cloudcord"
+            type=discord.ActivityType.streaming,
+            name="cloud bot",
+            url="https://twitch.tv/littxle_"
         ),
         status=discord.Status.idle,
     )
