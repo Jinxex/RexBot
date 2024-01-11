@@ -2,10 +2,10 @@ import discord
 from discord.ext import commands
 from discord.commands import slash_command, SlashCommandGroup
 import datetime
-import cloudcord
+import littxlecord
 
 
-class ranks(cloudcord.Cog, emoji="🌩"):
+class ranks(littxlecord.Cog, emoji="🌩"):
     team = SlashCommandGroup("team", description="Lass dich von niemandem bestehlen⭐")
 
     @team.command(name="uprank", description="Gib einem User einen Uprank!")

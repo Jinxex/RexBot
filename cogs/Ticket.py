@@ -1,7 +1,7 @@
 import datetime
 
 import discord
-import cloudcord
+import littxlecord
 from discord.ext import commands
 from discord.commands import slash_command, Option
 from discord.ui import Select, View
@@ -64,8 +64,8 @@ class EmbedView(discord.ui.View):
             emoji="👥",
         ),
         discord.SelectOption(
-            label="cloudcord/bot",
-            description="cloudcord/bot Ticket | Für: ein Problem zu melden",
+            label="littxlecord/bot",
+            description="littxlecord/bot Ticket | Für: ein Problem zu melden",
             value="Problem",
             emoji="🚒",
         ),
@@ -419,7 +419,7 @@ class TicketSchliesenView(discord.ui.View):
 
         userembed = discord.Embed(
             title="Dein Ticket wurde geschlossen",
-            description=f"Dein Ticket bei ``Cloudcord |  Support `` wurde geschlossen.\n"
+            description=f"Dein Ticket bei ``littxlecord |  Support `` wurde geschlossen.\n"
             f"```{interaction.channel.name}```\n"
             f"Das Transkript findest du [hier]({link}).",
             color=discord.Color.blue(),

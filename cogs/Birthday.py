@@ -1,11 +1,11 @@
 from discord.ext import commands, tasks
 from datetime import datetime
 import discord
-import cloudcord
+import littxlecord
 from discord.commands import slash_command, SlashCommandGroup
 
 
-class BirthdayDB(cloudcord.DBHandler):
+class BirthdayDB(littxlecord.DBHandler):
     def __init__(self):
         super().__init__("birthdays.db")
 
@@ -40,7 +40,7 @@ class BirthdayDB(cloudcord.DBHandler):
 db = BirthdayDB()
 
 
-class BirthdayCog(cloudcord.Cog, emoji="🎂"):
+class BirthdayCog(littxlecord.Cog, emoji="🎂"):
     birthday = SlashCommandGroup(
         "birthday", description="Schreiben Sie dort Ihren Geburtstag!🎂"
     )

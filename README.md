@@ -11,5 +11,5 @@ Das ist eine Python-Bibliothek, die auf [discord.py](https://github.com/Rapptz/d
 ```
 TOKEN = 123456789abcde
 ```
-3. the is on cloudcord and py-cord written
+3. the is on littxlecord and py-cord written
 4. If you have any questions or would like to install something, write to me on DM  (littxle_)

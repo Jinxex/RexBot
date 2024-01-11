@@ -7,14 +7,14 @@ import re
 import colorama
 from discord.ext import commands
 from colorama import Fore
-import cloudcord
+import littxlecord
 from discord import Color
 import random
 
 intents = discord.Intents.all()
 
 
-bot = cloudcord.Bot(
+bot = littxlecord.Bot(
     intents=intents,
     debug_guilds=[1190258614640836659],
 )
