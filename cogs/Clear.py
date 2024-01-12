@@ -11,7 +11,7 @@ class Clear(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def clear(self, ctx, amount: int):
         if amount > 100:
-            await ctx.blitz(
+            await ctx.respond(
                 "Du kannst nicht mehr als 100 Nachrichten auf einmal löschen!"
             )
         else:
