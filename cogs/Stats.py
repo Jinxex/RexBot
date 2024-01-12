@@ -49,11 +49,11 @@ class Stats(commands.Cog):
         hours = int(hours)
         if hours == 0:
             if minutes == 0:
-                return f"``⏲ vor {int(seconds)} Sekunden``"
+                return f"``Letzter Neustart ``<a:cloudcord:1192914941842300978>`` {int(seconds)} Sekunden``"
             else:
-                return f"``⏲ vor {int(minutes)} Minuten``"
+                return f"``Letzter Neustart ``<a:cloudcord:1192914941842300978>`` {int(minutes)} Minuten``"
         else:
-            return f"``⏲ vor {hours} Stunden``"
+            return f"``Letzter Neustart ``<a:cloudcord:1192914941842300978>`` {hours} Stunden``"
 
 
 def setup(bot):
