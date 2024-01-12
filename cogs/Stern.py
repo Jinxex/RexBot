@@ -9,7 +9,7 @@ from datetime import datetime
 
 class sternDB(littxlecord.DBHandler):
     def __init__(self):
-        super().__init__("stern.db")
+        super().__init__("database/stern.db")
 
 
     async def setup(self):

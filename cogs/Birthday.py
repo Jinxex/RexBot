@@ -7,7 +7,7 @@ from discord.commands import slash_command, SlashCommandGroup
 
 class BirthdayDB(littxlecord.DBHandler):
     def __init__(self):
-        super().__init__("birthdays.db")
+        super().__init__("database/birthdays.db")
 
     async def setup(self):
         await self.execute(
