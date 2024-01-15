@@ -10,9 +10,7 @@ class Report(littxlecord.Cog):
         self.owner_id = 817435791079768105
 
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.bot.add_view(reportView())
+
 
 
 
@@ -29,25 +27,9 @@ class Report(littxlecord.Cog):
         )
 
         dm_channel = await owner_user.create_dm()
-        await dm_channel.send(embed=embed,view=reportView())
+        await dm_channel.send(embed=embed)
 
-        await ctx.respond("Your report has been sent. Thank you, it may take a maximum of a day to receive an answer!", ephemeral=True)
+        await ctx.respond("Your report has been sent. Thank you", ephemeral=True)
 
 def setup(bot):
     bot.add_cog(Report(bot))
-
-class reportView(View):
-    def __init__(self):
-        super().__init__(timeout=None)
-
-
-    @discord.ui.button(label="yes", style=discord.ButtonStyle.primary, emoji="✔", custom_id="yes", row=2)
-    async def button_callback1(self, button, interaction):
-        await interaction.response.send_message("Your error has been confirmed. Please join the Discord server for the bug role: https://discord.gg/8ew7Sw6Tzy", ephemeral=True)
-    
-
-    @discord.ui.button(label="no", style=discord.ButtonStyle.primary, emoji="❌", custom_id="no", row=2)
-    async def button_callback2(self, button, interaction):
-        await interaction.response.send_message("The bot owner didn't confirm it, which means it's not a bot bug, but a bug on the Discord server or wherever Discord is located and there's nothing we can do about it. Have fun!🥰")
-    
-
