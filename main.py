@@ -28,11 +28,6 @@ async def on_member_join(member):
         await member.add_roles(role)
 
 
-#
-
-#
-
-
 @bot.event
 async def on_ready():
     await bot.change_presence(
@@ -45,11 +40,13 @@ async def on_ready():
     )
 
 
+
+
 bot.add_help_command()
 
 
 if __name__ == "__main__":
     bot.load_cogs("cogs", subdirectories=True)
-
+                
     load_dotenv()
     bot.run()

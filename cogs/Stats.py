@@ -10,10 +10,9 @@ class Stats(commands.Cog):
 
     @slash_command(
         name='stats',
-        description="Give the bot stats",
     )
     async def stats_command(self, ctx):
-        Support = discord.ui.Button(label="Support Srver", url="https://discord.gg/8ew7Sw6Tzy")
+        Support = discord.ui.Button(label="Support Server", url="https://discord.gg/8ew7Sw6Tzy")
         button = discord.ui.Button(label="Invite Me", url="https://discord.com/api/oauth2/authorize?client_id=1170449421796900925&permissions=12670091163894&scope=applications.commands+bot")
         view = discord.ui.View()
         view.add_item(button)
