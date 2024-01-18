@@ -180,7 +180,7 @@ class PunishView(discord.ui.View):
             f"{self.user.mention} wurde timeout für `{self.reason}`", ephemeral=True
         )
         await asyncio.sleep(5)
-        await interaction.delete_original_response()#
+        await interaction.delete_original_response()
 
 
 

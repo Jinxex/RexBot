@@ -11,6 +11,7 @@ class Stats(commands.Cog):
 
     @slash_command(
         name='stats',
+        description="give me stats on the bot"
     )
     async def stats_command(self, ctx):
         Support = discord.ui.Button(label="Support Server", url="https://discord.gg/8ew7Sw6Tzy")
@@ -25,7 +26,6 @@ class Stats(commands.Cog):
         bot_avatar_url = self.bot.user.avatar.url if self.bot.user.avatar else self.bot.user.default_avatar.url
 
 
-        random.seed(ctx.author.id)
         embed_color = discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
         embed = discord.Embed(
@@ -37,7 +37,7 @@ class Stats(commands.Cog):
         embed.add_field(name='Server Numbers', value=server_count, inline=True)
         embed.add_field(name='Server Members', value=member_count, inline=True)
         embed.add_field(name='Latency', value=latency, inline=True)
-        embed.add_field(name='Uptime', value= discord.utils.format_dt((self.start_time), "R"), inline=True)
+        embed.add_field(name='Last Reboot <a:cloudcord:1192914941842300978> ', value= discord.utils.format_dt((self.start_time), "R"), inline=True)
         timestamp = datetime.now().strftime("%H:%M Uhr")
         embed.add_field(name='Bot ID', value=f"{self.bot.user.id} • Heute um {timestamp}", inline=False)
 
