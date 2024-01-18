@@ -1,12 +1,13 @@
 import discord
 from discord.ext import commands
-import datetime
+from datetime import datetime
+import random
 from discord.commands import slash_command
 
 class Stats(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.start_time = datetime.datetime.utcnow()
+        self.start_time = datetime.now()
 
     @slash_command(
         name='stats',
@@ -21,12 +22,14 @@ class Stats(commands.Cog):
         server_count = len(self.bot.guilds)
         member_count = sum(guild.member_count for guild in self.bot.guilds)
         latency = f"{round(self.bot.latency * 1000)}ms"
-        uptime = self.get_uptime()
-
         bot_avatar_url = self.bot.user.avatar.url if self.bot.user.avatar else self.bot.user.default_avatar.url
 
+
+        random.seed(ctx.author.id)
+        embed_color = discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+
         embed = discord.Embed(
-            color=0x3498db
+            color=embed_color 
         )
         embed.set_author(name=self.bot.user.name, icon_url=bot_avatar_url)
         embed.set_thumbnail(url=bot_avatar_url)
@@ -34,26 +37,10 @@ class Stats(commands.Cog):
         embed.add_field(name='Server Numbers', value=server_count, inline=True)
         embed.add_field(name='Server Members', value=member_count, inline=True)
         embed.add_field(name='Latency', value=latency, inline=True)
-        embed.add_field(name='Uptime', value=uptime, inline=True)
-        timestamp = datetime.datetime.utcnow().strftime("%H:%M Uhr")
+        embed.add_field(name='Uptime', value= discord.utils.format_dt((self.start_time), "R"), inline=True)
+        timestamp = datetime.now().strftime("%H:%M Uhr")
         embed.add_field(name='Bot ID', value=f"{self.bot.user.id} • Heute um {timestamp}", inline=False)
 
-        await ctx.respond(embed=embed,view=view)
-
-    def get_uptime(self):
-        now = datetime.datetime.utcnow()
-        uptime_timedelta = now - self.start_time
-        hours, remainder = divmod(uptime_timedelta.total_seconds(), 3600)
-        minutes, seconds = divmod(remainder, 60)
-        hours = int(hours)
-        if hours == 0:
-            if minutes == 0:
-                return f"``Letzter Neustart ``<a:cloudcord:1192914941842300978>`` {int(seconds)} Sekunden``"
-            else:
-                return f"``Letzter Neustart ``<a:cloudcord:1192914941842300978>`` {int(minutes)} Minuten``"
-        else:
-            return f"``Letzter Neustart ``<a:cloudcord:1192914941842300978>`` {hours} Stunden``"
-
-
+        await ctx.respond(embed=embed, view=view)
 def setup(bot):
     bot.add_cog(Stats(bot))

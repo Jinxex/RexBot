@@ -7,7 +7,7 @@ import aiosqlite
 import time
 
 
-class PunishSystem(commands.Cog):
+class panel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -172,7 +172,7 @@ class PunishView(discord.ui.View):
             await asyncio.sleep(5)
             await interaction.delete_original_response()
             return
-        until = datetime.datetime.utcnow() + datetime.timedelta(seconds=self.timeout)
+        until = datetime.now() + datetime.timedelta(seconds=self.timeout)
 
         await self.user.timeout(reason=self.reason, until=until)
 
@@ -180,8 +180,16 @@ class PunishView(discord.ui.View):
             f"{self.user.mention} wurde timeout für `{self.reason}`", ephemeral=True
         )
         await asyncio.sleep(5)
-        await interaction.delete_original_response()
+        await interaction.delete_original_response()#
+
+
+
+
+
+
+        
+
 
 
 def setup(bot):
-    bot.add_cog(PunishSystem(bot))
+    bot.add_cog(panel(bot))
