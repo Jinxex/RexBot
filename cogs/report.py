@@ -9,11 +9,7 @@ class Report(littxlecord.Cog):
         self.bot = bot
         self.owner_id = 817435791079768105
 
-
-
-
-
-
+        
     @slash_command(
         description="Send a DM owner report about the bot!"
     )
