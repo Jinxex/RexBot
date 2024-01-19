@@ -46,7 +46,9 @@ bot.add_help_command()
 
 
 if __name__ == "__main__":
-    bot.load_cogs("cogs", subdirectories=True)
+    bot.load_cogs("./cogs/admin", subdirectories=True, custom_log_level="admin")
+    bot.load_cogs("./cogs/commmads", subdirectories=True, custom_log_level="commmads")
+    bot.load_cogs("./cogs/user", subdirectories=True, custom_log_level="user")
                 
     load_dotenv()
     bot.run()
