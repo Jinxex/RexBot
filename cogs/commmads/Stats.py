@@ -13,6 +13,7 @@ class Stats(commands.Cog):
         name='stats',
         description="give me stats on the bot"
     )
+    @discord.guild_only()
     async def stats_command(self, ctx):
         Support = discord.ui.Button(label="Support Server", url="https://discord.gg/8ew7Sw6Tzy")
         button = discord.ui.Button(label="Invite Me", url="https://discord.com/api/oauth2/authorize?client_id=1170449421796900925&permissions=12670091163894&scope=applications.commands+bot")

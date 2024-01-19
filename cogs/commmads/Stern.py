@@ -117,6 +117,7 @@ class stern(littxlecord.Cog, emoji="⭐"):
     stern = SlashCommandGroup("stern", description="Lass dich von niemandem bestehlen⭐")
 
     @stern.command(description="Holt dir eine Belohnung ab")
+    @discord.guild_only()
     @commands.cooldown(1, 86400, commands.BucketType.user)
     async def daily(self, ctx):
         user_id = ctx.user.id
@@ -168,6 +169,7 @@ class stern(littxlecord.Cog, emoji="⭐"):
     description="Oh je, wenn du den Befehl befolgst, wirst du nie Freunde finden☹"
 )
     @commands.cooldown(1, 7200, commands.BucketType.user)
+    @discord.guild_only()
     async def steal(self, ctx, member: Option(discord.Member)):
         required_stern = 20
         user_stern = await db.get_stern(ctx.author.id)
@@ -214,6 +216,7 @@ class stern(littxlecord.Cog, emoji="⭐"):
     # /give commmad
 
     @stern.command(description="du kannst dich freunde machen")
+    @discord.guild_only()
     async def give(self, ctx, member: Option(discord.Member), amount: int, description):
         if member.id == ctx.author.id or member.id == ctx.bot.user.id:
             embed = discord.Embed(
@@ -262,6 +265,7 @@ class stern(littxlecord.Cog, emoji="⭐"):
     # event commmad
 
     @stern.command(description="Löse ein zufälliges Event aus. uiii")
+    @discord.guild_only()
     @commands.cooldown(1, 3600, commands.BucketType.user)
     async def event(self, ctx):
         stern = await db.one("SELECT stern FROM users WHERE user_id = ?", ctx.author.id)
@@ -387,6 +391,7 @@ class stern(littxlecord.Cog, emoji="⭐"):
         await ctx.respond(embed=eventnotgoodembed)
 
     @stern.command(description="Überweisen von stern auf konto")
+    @discord.guild_only()
     async def konto(self, ctx, amount: int):
         user_id = ctx.author.id
 

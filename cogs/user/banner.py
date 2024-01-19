@@ -12,6 +12,7 @@ class Banner(littxlecord.Cog, emoji="❓"):
         name="banner",
         description="📱〢Zeigt dir dein Banner oder das Banner eines Members an!",
     )
+    @discord.guild_only()
     async def banner_user(self, ctx, member: Option(discord.Member, "Das Mitglied, dessen Banner du sehen möchtest.")):
 
         if member is None:

@@ -49,6 +49,7 @@ if __name__ == "__main__":
     bot.load_cogs("./cogs/admin", subdirectories=True, custom_log_level="admin")
     bot.load_cogs("./cogs/commmads", subdirectories=True, custom_log_level="commmads")
     bot.load_cogs("./cogs/user", subdirectories=True, custom_log_level="user")
+    bot.load_cogs("./cogs/events,", subdirectories=True, custom_log_level="events")
                 
     load_dotenv()
     bot.run()

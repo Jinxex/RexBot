@@ -21,6 +21,7 @@ class serverinfo(commands.Cog):
     info = SlashCommandGroup("info")
 
     @info.command(name="server", description="Zeigt Informationen Ã¼ber den server an.")
+    @discord.guild_only()
     async def _server(self, ctx: discord.Interaction):
         guild = ctx.guild
         name = str(ctx.guild.name)

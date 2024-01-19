@@ -20,6 +20,7 @@ class WelcomeCard(commands.Cog):
             )
 
     @slash_command()
+    @discord.guild_only()
     async def welcome_setup(
         self, ctx: discord.ApplicationContext, channel: Option(discord.TextChannel)
     ):

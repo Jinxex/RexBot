@@ -15,6 +15,7 @@ class panel(commands.Cog):
         name="admin", description="Achtung der User wird immer für 24 Stunden timeout!"
     )
     @discord.default_permissions(administrator=True, kick_members=True)
+    @discord.guild_only()
     async def punish(self, ctx, user: discord.Member, reason: str):
         overview_embed = discord.Embed(
             title=f"Wie möchtest du {user.name}#{user.discriminator} sanktionieren?",

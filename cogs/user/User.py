@@ -8,6 +8,7 @@ class UserInfo(commands.Cog):
         self.bot = bot
 
     @slash_command(description="Show information about a user")
+    @discord.guild_only()
     async def userinfo(
         self, ctx, user: Option(discord.Member, "Specify a user", default=None)
     ):

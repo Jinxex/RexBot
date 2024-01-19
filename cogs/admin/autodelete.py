@@ -36,6 +36,7 @@ class AutoDeleteCog(commands.Cog):
             guild_id, channel_id, interval = row
 
     @slash_command()
+    @discord.guild_only()
     @commands.has_permissions(manage_channels=True)
     @discord.default_permissions(manage_channels=True)
     async def autodelete(self, ctx, channel: discord.TextChannel, zeit: str):

@@ -13,6 +13,7 @@ class Report(littxlecord.Cog):
     @slash_command(
         description="Send a DM owner report about the bot!"
     )
+    @discord.guild_only()
     @commands.cooldown(1, 86400, commands.BucketType.user)
     async def report(self, ctx, reason: Option(str, description="Describe your problem in more detail and where the error lies")):
         owner_user = await self.bot.fetch_user(self.owner_id)

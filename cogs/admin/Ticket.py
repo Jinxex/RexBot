@@ -23,6 +23,7 @@ class Ticket(commands.Cog):
         self.bot.add_view(TicketSchliesenView(self.bot.user))
 
     @slash_command()
+    @discord.guild_only()
     @commands.has_permissions(administrator=True)
     async def ticket(self, ctx):
         embed = discord.Embed(

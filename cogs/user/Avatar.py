@@ -13,6 +13,7 @@ class avatar(commands.Cog):
         name="avatar",
         description="📱〢Zeigt dir dein Avatar oder das Avatar eines Members an!",
     )
+    @discord.guild_only()
     async def avatar(
         self, ctx, member: Option(discord.Member, "Wähle einen Memeber", required=False)
     ):
