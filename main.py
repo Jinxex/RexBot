@@ -20,12 +20,7 @@ bot = littxlecord.Bot(
 )
 
 
-@bot.event
-async def on_member_join(member):
-    role_ids = [1183612004846534708, 1183612004846534709]
-    for role_id in role_ids:
-        role = member.guild.get_role(role_id)
-        await member.add_roles(role)
+
 
 
 @bot.event
@@ -49,7 +44,7 @@ if __name__ == "__main__":
     bot.load_cogs("./cogs/admin", subdirectories=True, custom_log_level="admin")
     bot.load_cogs("./cogs/commmads", subdirectories=True, custom_log_level="commmads")
     bot.load_cogs("./cogs/user", subdirectories=True, custom_log_level="user")
-    bot.load_cogs("./cogs/events,", subdirectories=True, custom_log_level="events")
+    bot.load_cogs("./cogs/events", subdirectories=True, custom_log_level="events")
                 
     load_dotenv()
     bot.run()

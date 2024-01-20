@@ -24,7 +24,6 @@ class avatar(commands.Cog):
             selber_embed.set_image(url=ctx.user.avatar.url)
             selber_embed.set_footer(
                 icon_url=self.bot.user.avatar.url,
-                text="| Created by Dynamo Development",
             )
             await ctx.respond(embed=selber_embed)
             return

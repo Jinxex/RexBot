@@ -183,14 +183,5 @@ class PunishView(discord.ui.View):
         await asyncio.sleep(5)
         await interaction.delete_original_response()
 
-
-
-
-
-
-        
-
-
-
 def setup(bot):
     bot.add_cog(panel(bot))
