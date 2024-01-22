@@ -198,7 +198,7 @@ class UserHinzufuegenModal(discord.ui.Modal):
                 max_length=18,
             ),
             *args,
-            **kwargs,
+            **kwargs
         )
 
     async def callback(self, interaction):
@@ -210,11 +210,9 @@ class UserHinzufuegenModal(discord.ui.Modal):
             ungueltige_id_embed = discord.Embed(
                 title="Ungültige User ID",
                 description=f"Bitte gib eine gültige numerische ID ein",
-                color=discord.Color.red(),
+                color=discord.Color.red()
             )
-            await interaction.response.send_message(
-                embed=ungueltige_id_embed, ephemeral=True
-            )
+            await interaction.response.send_message(embed=ungueltige_id_embed, ephemeral=True)
             return
 
         user = interaction.guild.get_member(user_id)
@@ -223,7 +221,7 @@ class UserHinzufuegenModal(discord.ui.Modal):
             user_id_embed = discord.Embed(
                 title="User nicht Gefunden",
                 description=f"Die angegebene User ID wurde nicht gefunden oder gibt es nicht",
-                color=discord.Color.red(),
+                color=discord.Color.red()
             )
             await interaction.response.send_message(embed=user_id_embed, ephemeral=True)
             return
@@ -231,22 +229,22 @@ class UserHinzufuegenModal(discord.ui.Modal):
         text_channel = interaction.channel
         overwrites = text_channel.overwrites
 
-        if user in overwrites:
+        if text_channel.overwrites_for(user).view_channel:
             user_id_ist_im_ticket = discord.Embed(
                 title="User bereits im Ticket",
                 description=f"Der User {user.mention} ist bereits im Ticket.",
-                color=discord.Color.blue(),
+                color=discord.Color.blue()
             )
-            await interaction.response.send_message(
-                embed=user_id_ist_im_ticket, ephemeral=True
-            )
+            await interaction.response.send_message(embed=user_id_ist_im_ticket, ephemeral=True)
             return
 
+        # Ändere die Berechtigungen für die @everyone-Rolle, um den Zugriff zu beschränken
         overwrites[interaction.guild.default_role] = discord.PermissionOverwrite(
             read_messages=False,
             send_messages=False,
         )
 
+        # Setze die Berechtigungen für den hinzugefügten Benutzer
         overwrites[user] = discord.PermissionOverwrite(
             read_messages=True,
             send_messages=True,
@@ -267,7 +265,7 @@ class UserHinzufuegenModal(discord.ui.Modal):
         embed = discord.Embed(
             title="✅ USER ERFOLGREICH HINZUGEFÜGT ✅",
             description=f"{interaction.user.mention} hat den User {user.mention} zum Ticket Hinzugefügt",
-            color=discord.Color.green(),
+            color=discord.Color.green()
         )
         await interaction.response.send_message(embed=embed)
 
@@ -285,7 +283,7 @@ class UserEntfernenModal(discord.ui.Modal):
                 max_length=18,
             ),
             *args,
-            **kwargs,
+            **kwargs
         )
 
     async def callback(self, interaction):
@@ -297,11 +295,9 @@ class UserEntfernenModal(discord.ui.Modal):
             ungueltige_id_embed = discord.Embed(
                 title="Ungültige User ID",
                 description=f"Bitte gib eine gültige numerische ID ein",
-                color=discord.Color.red(),
+                color=discord.Color.red()
             )
-            await interaction.response.send_message(
-                embed=ungueltige_id_embed, ephemeral=True
-            )
+            await interaction.response.send_message(embed=ungueltige_id_embed, ephemeral=True)
             return
 
         user = interaction.guild.get_member(user_id)
@@ -310,7 +306,7 @@ class UserEntfernenModal(discord.ui.Modal):
             user_id_embed = discord.Embed(
                 title="User nicht Gefunden",
                 description=f"Die angegebene User ID wurde nicht gefunden oder gibt es nicht",
-                color=discord.Color.red(),
+                color=discord.Color.red()
             )
             await interaction.response.send_message(embed=user_id_embed, ephemeral=True)
             return
@@ -318,22 +314,22 @@ class UserEntfernenModal(discord.ui.Modal):
         text_channel = interaction.channel
         overwrites = text_channel.overwrites
 
-        if user in overwrites:
+        if text_channel.overwrites_for(user).view_channel is not True:
             users_id_ist_im_ticket = discord.Embed(
                 title="User ist nicht im ticket",
                 description=f"Der User {user.mention} ist nicht im ticket.",
-                color=discord.Color.blue(),
+                color=discord.Color.blue()
             )
-            await interaction.response.send_message(
-                embed=users_id_ist_im_ticket, ephemeral=True
-            )
+            await interaction.response.send_message(embed=users_id_ist_im_ticket, ephemeral=True)
             return
 
+        # Ändere die Berechtigungen für die @everyone-Rolle, um den Zugriff zu beschränken
         overwrites[interaction.guild.default_role] = discord.PermissionOverwrite(
             read_messages=False,
             send_messages=False,
         )
 
+        # Setze die Berechtigungen für den hinzugefügten Benutzer
         overwrites[user] = discord.PermissionOverwrite(
             read_messages=False,
             send_messages=False,
@@ -352,9 +348,9 @@ class UserEntfernenModal(discord.ui.Modal):
         await text_channel.edit(overwrites=overwrites)
 
         embed = discord.Embed(
-            title="❌ User erfolgreich entfernt",
+            title="✅ User erfolgreich entfernt",
             description=f"{interaction.user.mention} hat den User {user.mention} vom Ticket entfernt",
-            color=discord.Color.red(),
+            color=discord.Color.green()
         )
         await interaction.response.send_message(embed=embed)
 
