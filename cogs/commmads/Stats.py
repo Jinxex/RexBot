@@ -41,7 +41,7 @@ class Stats(commands.Cog):
         embed.add_field(name='Last Reboot <a:cloudcord:1192914941842300978> ', value= discord.utils.format_dt((self.start_time), "R"), inline=True)
         timestamp = datetime.now().strftime("%H:%M Uhr")
         embed.add_field(name='Bot ID', value=f"{self.bot.user.id} • Heute um {timestamp}", inline=False)
-
+        await ctx.defer()
         await ctx.respond(embed=embed, view=view)
 def setup(bot):
     bot.add_cog(Stats(bot))

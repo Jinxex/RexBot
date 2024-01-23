@@ -35,6 +35,7 @@ class WelcomeCard(commands.Cog):
                 owner = ctx.guild.owner
                 if owner:
                     await owner.send("Der Willkommens-Setup wurde bereits für diesen Server durchgeführt. Schreiben Sie dem littxle_, weil Sie den falschen Kanal oder die falsche Rolle eingegeben haben!")
+                    await ctx.defer(ephemeral=True)
                     await ctx.respond("look at DM!", ephemeral=True)
                 return
             
@@ -44,6 +45,7 @@ class WelcomeCard(commands.Cog):
             )
 
             await db.commit()
+            await ctx.defer(ephemeral=True)
             await ctx.respond(f"✅ Willkommenskanal auf {channel.mention} und Rollenname auf {role_name.mention} gesetzt", ephemeral=True)
 
 

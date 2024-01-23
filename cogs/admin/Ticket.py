@@ -36,7 +36,7 @@ class Ticket(commands.Cog):
         )
 
         view = EmbedView()
-
+        await ctx.defer()
         await ctx.respond(embed=embed, view=view)
 
 

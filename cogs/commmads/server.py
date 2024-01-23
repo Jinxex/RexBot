@@ -21,6 +21,7 @@ class serverinfo(commands.Cog):
     info = SlashCommandGroup("info")
 
     @info.command(name="server", description="Zeigt Informationen Ã¼ber den server an.")
+    
     @discord.guild_only()
     async def _server(self, ctx: discord.Interaction):
         guild = ctx.guild
@@ -76,6 +77,7 @@ class serverinfo(commands.Cog):
             value=f"```{ctx.guild.premium_subscription_count}```",
             inline=True,
         )
+        await ctx.defer()
         await ctx.respond(embed=embed)
 
 

@@ -158,7 +158,7 @@ class stern(littxlecord.Cog, emoji="⭐"):
         )
         embed.add_field(name=f"Du hast nun {total_stern + current_stern} Sterne ⭐", value=" ")
         embed.set_thumbnail(url=ctx.author.display_avatar.url)
-
+        await ctx.defer()
         await ctx.respond(embed=embed)
 
 
@@ -210,6 +210,7 @@ class stern(littxlecord.Cog, emoji="⭐"):
             color=discord.Color.red(),
         )
         embed.set_thumbnail(url=ctx.author.display_avatar.url)
+        await ctx.defer()
         await ctx.respond(embed=embed, ephemeral=True)
         return
 
@@ -259,7 +260,7 @@ class stern(littxlecord.Cog, emoji="⭐"):
 
         await db.subtract_stern(ctx.author.id, amount)
         await db.add_stern(member.id, amount)
-
+        await ctx.defer()
         await ctx.respond(embed=embed_sender)
 
     # event commmad
@@ -376,6 +377,7 @@ class stern(littxlecord.Cog, emoji="⭐"):
             return
         if goodordosent == 1:
             await ctx.respond(embed=eventgoodembed)
+            await ctx.defer()
             Neue_stern = stern + Sterne_good
             await db.execute(
                 "UPDATE users SET stern = ? WHERE user_id = ?",
@@ -388,6 +390,7 @@ class stern(littxlecord.Cog, emoji="⭐"):
             (Neue_stern2, ctx.author.id),
         )
         await db.close()
+        await ctx.defer()
         await ctx.respond(embed=eventnotgoodembed)
 
     @stern.command(description="Überweisen von stern auf konto")
@@ -411,6 +414,7 @@ class stern(littxlecord.Cog, emoji="⭐"):
             color=discord.Color.yellow(),
         )
         embed.set_thumbnail(url=ctx.author.display_avatar.url)
+        await ctx.defer()
         await ctx.respond(embed=embed)
 
     @stern.command()
@@ -437,6 +441,7 @@ class stern(littxlecord.Cog, emoji="⭐"):
             inline=False
          )
         embed_balance.set_thumbnail(url=member.display_avatar.url)
+        await ctx.defer()
         await ctx.respond(embed=embed_balance)
 
 
