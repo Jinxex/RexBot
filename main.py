@@ -46,6 +46,7 @@ if __name__ == "__main__":
     bot.load_cogs("./cogs/user", subdirectories=True, custom_log_level="user")
     bot.load_cogs("./cogs/events", subdirectories=True, custom_log_level="events")
     bot.load_cogs("./cogs/minigame", subdirectories=True, custom_log_level="minigame")
+    bot.load_cogs("./cogs/tempvoice", subdirectories=True, custom_log_level="tempvoice")
                 
     load_dotenv()
     bot.run()

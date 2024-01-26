@@ -148,6 +148,7 @@ class embedView(discord.ui.View):
         placeholder="Optionen",
         options=options,
         custom_id="dropdown2",
+
     )
     async def select_callback2(self, select, interaction):
         auswahl = select.values[0]
