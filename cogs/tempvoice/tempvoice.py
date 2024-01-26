@@ -49,6 +49,7 @@ class TempvoiceView(discord.ui.View):
 
     @discord.ui.button(label="Ban", style=discord.ButtonStyle.gray, emoji="⛔", row=1, custom_id="button_ban")
     async def button_callback1(self, button, interaction):
+        await interaction.response.send_modal(Modal(title="Awdhawjdhguaqwd"))
         await interaction.response.send_message(f"Du hast dem {interaction.user.name} aus deinem Voicechat gebannt", ephemeral=True)
 
     @discord.ui.button(label="unban", style=discord.ButtonStyle.gray, emoji="🎫", custom_id="button_unban")
