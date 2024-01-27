@@ -10,15 +10,25 @@ class tempvoiceDB(ezcord.DBHandler):
     async def setup(self):
         await self.execute(
             """CREATE TABLE IF NOT EXISTS users(
-            server_id BIGINT PRIMARY KEY,
+            server_id INTEGER PRIMARY KEY,
             VoiceChannel_id INTEGER DEFAULT 0,
             Channel_id INTEGER DEFAULT 0
             )"""
         )
 
-    async def get_voicechannel(self, guild_id):
+    async def get_channel(self, guild_id):
         return await self.execute(f"SELECT VoiceChannel_id FROM users WHERE server_id = {guild_id}")
+    
+    async def get_txtchannel(self, txt_channel,guild_id):
+        async with self.start() as cursor:
+            await cursor.execute("INSERT OR IGNORE INTO users (server_id) VALUES (?)", guild_id)
+            await cursor.execute(f"UPDATE users SET Channel_id = ? WHERE server_id = ?", txt_channel,guild_id)
 
+
+    async def get_voice(self, guild_id,voicechannel_id):
+        async with self.start() as cursor:
+            await cursor.execute("INSERT OR IGNORE INTO users (server_id) VALUES (?)", guild_id)
+            await cursor.execute("UPDATE users SET VoiceChannel_id = ? WHERE server_id = ?", voicechannel_id, guild_id)
 db = tempvoiceDB()
 
 class Tempvoice(commands.Cog):
@@ -32,7 +42,7 @@ class Tempvoice(commands.Cog):
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         if before.channel != after.channel:
-            voicechannel_id = await db.get_voicechannel(member.guild.id)
+            voicechannel_id = await db.get_channel(member.guild.id)
             if after.channel is not None and after.channel.id == voicechannel_id:
                 print(f"{member.name} ist dem temporären Sprachkanal beigetreten.")
 
@@ -40,13 +50,13 @@ class Tempvoice(commands.Cog):
 
     @tempvoice.command(description="Wähle einen Channel")
     async def setup(self, ctx):
+        await db.get_txtchannel(ctx.channel.id,ctx.guild.id)
+        await ctx.channel.send(view=TempvoiceView(self.bot))
         await ctx.respond("Du hast den Kanal ausgewählt", ephemeral=True)
-        await ctx.channel.send(view=TempvoiceView())
 
     @tempvoice.command(description="Wähle einen Voicechannel")
     async def voicechannel(self, ctx, voicechannel: Option(discord.VoiceChannel, description="Wähle einen Voicechannel", required=True)):
-        guild_id = ctx.guild.id
-        await db.execute(f"UPDATE users SET VoiceChannel_id = {voicechannel.id} WHERE server_id = {guild_id}")
+        await db.get_voice(ctx.guild.id, voicechannel.id)
         await ctx.respond("Du hast deinen Voicechannel ausgewählt", ephemeral=True)
 
 def setup(bot):
@@ -82,13 +92,16 @@ class TempvoiceModal(discord.ui.Modal):
             )
             await interaction.response.send_message(embed=userlimit_embed, ephemeral=True)
 
+
+
+
 class TempvoiceView(discord.ui.View):
     def __init__(self, bot):
         super().__init__(timeout=None)
         self.bot = bot
 
     async def is_user_in_tempvoice(self, user, guild_id):
-        voice_channel_id = await db.get_voicechannel(guild_id)
+        voice_channel_id = await db.get_channel(guild_id)
         if voice_channel_id is not None:
             voice_channel = self.bot.get_channel(voice_channel_id)
             member = voice_channel.guild.get_member(user.id)
@@ -96,12 +109,8 @@ class TempvoiceView(discord.ui.View):
         return False
 
     @discord.ui.button(label="Ban", style=discord.ButtonStyle.gray, emoji="⛔", row=1, custom_id="button_ban")
-    async def button_callback1(self, button, interaction):
-        user_in_tempvoice = await self.is_user_in_tempvoice(interaction.user, interaction.guild_id)
-        if user_in_tempvoice:
-            await interaction.response.send_message(f"Du hast erfolgreich {interaction.user.name} aus deinen Kanälen gebannt.", ephemeral=True)
-        else:
-            await interaction.response.send_message(f"{interaction.user.name} ist nicht im temporären Sprachkanal.", ephemeral=True)
+    async def button_callback1(self, button,  interaction):
+        await interaction.response.send_message(f"Du hast erfolgreich {interaction.user.name} aus deinen Kanälen gebannt.", ephemeral=True)
 
     @discord.ui.button(label="unban", style=discord.ButtonStyle.gray, emoji="🔰", row=1, custom_id="button_unban")
     async def button_callback2(self, button, interaction):
