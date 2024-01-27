@@ -7,14 +7,14 @@ import re
 import colorama
 from discord.ext import commands
 from colorama import Fore
-import littxlecord
+import ezcord
 from discord import Color
 import random
 
 intents = discord.Intents.all()
 
 
-bot = littxlecord.Bot(
+bot = ezcord.Bot(
     intents=intents,
     debug_guilds=[1190258614640836659],
 )

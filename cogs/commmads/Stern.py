@@ -1,13 +1,13 @@
 from discord.commands import slash_command, Option, SlashCommandGroup
 from discord.ext import commands
-import littxlecord
+import ezcord
 import discord
 import random
 import asyncio
 from discord.ext import commands
 from datetime import datetime
 
-class sternDB(littxlecord.DBHandler):
+class sternDB(ezcord.DBHandler):
     def __init__(self):
         super().__init__("database/stern.db")
 
@@ -113,7 +113,7 @@ class sternDB(littxlecord.DBHandler):
 db = sternDB()
 
 
-class stern(littxlecord.Cog, emoji="⭐"):
+class stern(ezcord.Cog, emoji="⭐"):
     stern = SlashCommandGroup("stern", description="Lass dich von niemandem bestehlen⭐")
 
     @stern.command(description="Holt dir eine Belohnung ab")

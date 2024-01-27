@@ -1,10 +1,10 @@
 import discord
 from discord.commands import slash_command, Option
-import littxlecord
+import ezcord
 from discord.ext import commands
-from littxlecord import View
+from ezcord import View
 
-class Report(littxlecord.Cog):
+class Report(ezcord.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.owner_id = 817435791079768105

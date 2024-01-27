@@ -1,7 +1,7 @@
 import datetime
 
 import discord
-import littxlecord
+import ezcord
 from discord.ext import commands
 from discord.commands import slash_command, Option
 from discord.ui import Select, View
@@ -65,8 +65,8 @@ class EmbedView(discord.ui.View):
             emoji="👥",
         ),
         discord.SelectOption(
-            label="littxlecord/bot",
-            description="littxlecord/bot Ticket | Für: ein Problem zu melden",
+            label="ezcord/bot",
+            description="ezcord/bot Ticket | Für: ein Problem zu melden",
             value="Problem",
             emoji="🚒",
         ),
@@ -238,8 +238,6 @@ class UserHinzufuegenModal(discord.ui.Modal):
             )
             await interaction.response.send_message(embed=user_id_ist_im_ticket, ephemeral=True)
             return
-
-        # Ändere die Berechtigungen für die @everyone-Rolle, um den Zugriff zu beschränken
         overwrites[interaction.guild.default_role] = discord.PermissionOverwrite(
             read_messages=False,
             send_messages=False,
@@ -417,7 +415,7 @@ class TicketSchliesenView(discord.ui.View):
 
         userembed = discord.Embed(
             title="Dein Ticket wurde geschlossen",
-            description=f"Dein Ticket bei ``littxlecord |  Support `` wurde geschlossen.\n"
+            description=f"Dein Ticket bei ``ezcord |  Support `` wurde geschlossen.\n"
             f"```{interaction.channel.name}```\n"
             f"Das Transkript findest du [hier]({link}).",
             color=discord.Color.blue(),
