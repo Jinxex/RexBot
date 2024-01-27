@@ -62,6 +62,60 @@ class Tempvoice(commands.Cog):
 def setup(bot):
     bot.add_cog(Tempvoice(bot))
 
+class banView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.user_select(
+        min_values=1,
+        max_values=2,
+        placeholder="Triff eine Auswahl",
+        custom_id="ban"
+    )
+    async def select_callback(self, select, interaction):
+            await interaction.response.send_message(f"Du hast {select.values[0].mention} gewählt.")
+
+
+class unbanView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.user_select(
+        min_values=1,
+        max_values=2,
+        placeholder="Triff eine Auswahl",
+        custom_id="unban"
+    )
+    async def select_callback(self, select, interaction):
+            await interaction.response.send_message(f"Du hast {select.values[0].mention} gewählt.")
+
+class kickView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.user_select(
+        min_values=1,
+        max_values=2,
+        placeholder="Triff eine Auswahl",
+        custom_id="kick"
+    )
+    async def select_callback(self, select, interaction):
+            await interaction.response.send_message(f"Du hast {select.values[0].mention} gewählt.")
+
+class OwnerView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.user_select(
+        min_values=1,
+        max_values=2,
+        placeholder="Triff eine Auswahl",
+        custom_id="Owner"
+    )
+    async def select_callback(self, select, interaction):
+            await interaction.response.send_message(f"Du hast {select.values[0].mention} gewählt.")
+
+
 class TempvoiceModal(discord.ui.Modal):
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -109,12 +163,12 @@ class TempvoiceView(discord.ui.View):
         return False
 
     @discord.ui.button(label="Ban", style=discord.ButtonStyle.gray, emoji="⛔", row=1, custom_id="button_ban")
-    async def button_callback1(self, button,  interaction):
-        await interaction.response.send_message(f"Du hast erfolgreich {interaction.user.name} aus deinen Kanälen gebannt.", ephemeral=True)
+    async def button_callback1(self, button, interaction):
+        await interaction.response.send_message(f"Du hast erfolgreich {interaction.user.name} aus deinen Kanälen gebannt.", ephemeral=True, view=banView())
 
     @discord.ui.button(label="unban", style=discord.ButtonStyle.gray, emoji="🔰", row=1, custom_id="button_unban")
-    async def button_callback2(self, button, interaction):
-        await interaction.response.send_message(f"{interaction.user.name} kann deinen Kanälen nun wieder beitreten ✨", ephemeral=True)
+    async def button_callback2(self, select, interaction):
+        await interaction.response.send_message(f"{interaction.user.name} kann deinen Kanälen nun wieder beitreten ✨", ephemeral=True, view=unbanView())
 
     @discord.ui.button(label="Userlimit", style=discord.ButtonStyle.gray, row=1, emoji="👥", custom_id="button_Userlimit")
     async def button_callback3(self, button, interaction):
@@ -134,8 +188,8 @@ class TempvoiceView(discord.ui.View):
 
     @discord.ui.button(label="kick", style=discord.ButtonStyle.gray, emoji="🔨", row=2, custom_id="button_kick")
     async def button_callback7(self, button, interaction):
-        await interaction.response.send_message(f"Du hast dem {interaction.user.name} aus deinem Voicechat gekickt")
+        await interaction.response.send_message(f"Du hast dem {interaction.user.name} aus deinem Voicechat gekickt", ephemeral=True, view=kickView())
 
     @discord.ui.button(label="Neu Owner", style=discord.ButtonStyle.gray, emoji="👑", row=2, custom_id="button_owner")
     async def button_callback8(self, button, interaction):
-        await interaction.send_message(f"Du hast dem {interaction.user.name} als neuen Voicechat-Owner gemacht")
+        await interaction.send_message(f"Du hast dem {interaction.user.name} als neuen Voicechat-Owner gemacht", ephemeral=True, view=OwnerView())
