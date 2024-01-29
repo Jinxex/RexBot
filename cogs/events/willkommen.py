@@ -23,7 +23,8 @@ class WelcomeCard(commands.Cog):
     @slash_command()
     @discord.guild_only()
     async def welcome_setup(
-        self, ctx: discord.ApplicationContext, channel: Option(discord.TextChannel), role_name: Option(discord.Role)
+        self, ctx: discord.ApplicationContext, channel: Option(discord.TextChannel), role_name: Option(discord.Role) 
+
     ):
         async with aiosqlite.connect(self.DB) as db:
             cursor = await db.execute(
@@ -73,7 +74,7 @@ class WelcomeCard(commands.Cog):
                         icon_url=member.guild.icon.url, name=member.guild.name
                     )
                     embed.set_image(
-                        url="https://media.discordapp.net/attachments/1190258623511789603/1192734854073299095/dy1QM5M.png?ex=65aa27e5&is=6597b2e5&hm=480032919b01d512a06c30e4319680ef2f0b2dbbb3af1b4047dc7e5a09fc3957&=&format=webp&quality=lossless&width=1246&height=701"
+                        url="https://tse1.mm.bing.net/th?id=OIP.mJ4zvJuNlVIy_ryGKf_YpgHaC9&pid=Api&P=0&h=180"
                     )
 
                     await channel.send(member.mention, embed=embed)
