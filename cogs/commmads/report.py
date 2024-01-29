@@ -23,7 +23,6 @@ class Report(ezcord.Cog):
             description=reason,
             color=discord.Color.red()
         )
-
         dm_channel = await owner_user.create_dm()
         await dm_channel.send(embed=embed)
 
