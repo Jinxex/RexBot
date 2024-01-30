@@ -86,12 +86,6 @@ class WelcomeSystem(ezcord.Cog):
         elif status == "Off":
             return
 
-    @welcome.command(description='fix')
-    async def fix(self, ctx):
-        await db.fix(ctx.guild.id)
-        await ctx.respond('Fixed!')
-
-
     @welcome.command(description="👋・Aktiviere das Wilkommens-System")
     async def setup(self, ctx: discord.ApplicationContext):
         status = await db.check_enabled(ctx.guild.id)
@@ -171,15 +165,8 @@ class WlcChannelSelect(discord.ui.View):
         else:
             await interaction.response.send_message("> **Du bist nicht berechtigt, diese View zu nutzen!**", ephemeral=True)
 
-class EmbedSelect(discord.ui.View):
-    def __init__(self, ctx, bot):
-        self.ctx = ctx
-        self.bot = bot
-        super().__init__(timeout=30, disable_on_timeout=True)
-
-
     @discord.ui.role_select(
-        placeholder="Triff eine Auswahl",
+        placeholder="Triff eie Auswahl",
         custom_id="embedSelect",
         min_values=1,
         max_values=1,
@@ -187,15 +174,17 @@ class EmbedSelect(discord.ui.View):
     async def role_select(self, select, interaction: discord.Interaction):
         if self.ctx.user.id == interaction.user.id:
             embed = discord.Embed(
-                title="👋 embed-System",
-                description=f"*Du hast ein Neu Embed gemacht**\n\n"
-                            f"Deaktiviere es wieder mit {self.bot.get_cmd('Embed stop')}",
+                title="👋 role-System",
+                description=f"*Du hast eine role gemacht**\n\n"
+                            f"Deaktiviere es wieder mit {self.bot.get_cmd('role stop')}",
                 color=discord.Color.brand_green()
             )
             await interaction.message.edit(embed=embed, view=None)
             await db.enable(server_id=interaction.guild.id, channel_id=select.values[0].id, enabled="On")
         else:
             await interaction.response.send_message("> **Du bist nicht berechtigt, diese View zu nutzen!**", ephemeral=True)
+
+
 
 
 
