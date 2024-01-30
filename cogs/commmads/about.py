@@ -19,7 +19,7 @@ class FlexiiThisBot(ezcord.Cog):
     async def bot(self, ctx: discord.ApplicationContext):
         embed = discord.Embed(
             color=discord.Color.blurple(),
-            title="🍪 Hey du!",
+            title="🛩 Hey du!",
             description=f"Hier findest du einige hilfreiche Informationen über mich - Falls du einen Bug findest, benutze bitte **{self.bot.get_cmd('bug')}** um diesen zu melden"
         )
         embed.set_thumbnail(url=self.bot.user.display_avatar)
