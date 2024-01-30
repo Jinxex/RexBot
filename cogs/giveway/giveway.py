@@ -33,13 +33,13 @@ class giveway(ezcord.Cog):
 
     @slash_command(description="🎉・Activate the GiveWay system")
     async def giveway(self, ctx):
+        embed_color = discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
         embed= discord.Embed(
             title="Giveaway start",
-            description="🎉・Start a Giveaway System"
+            description="🎉・Start a Giveaway System",
+            color=embed_color 
         )
-        color=discord.Color.random()
-
         await ctx.respond(embed=embed, view=GiveawayView())
 
 
@@ -65,7 +65,7 @@ class GiveawayModal(discord.ui.Modal):
         giveway = self.children[0].value
         giveway_embed = discord.Embed(
             title=f"You have your {giveway} start",
-            description=f"",
+            description=f"you give is {giveway}",
             color=discord.Color.green()
         )
         await interaction.response.send_message(embed=giveway_embed, ephemeral=True)
