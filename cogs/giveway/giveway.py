@@ -1,85 +1,70 @@
 import discord
 from discord.commands import slash_command
-import ezcord
 from ezcord import View
 from discord.ext import commands
 import random
 
-class givewayDB(ezcord.DBHandler):
-    def __init__(self):
-        super().__init__("data/db//giveway.db")
+class GiveawayCog(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.giveaway_started = False
+        self.giveaway_embed = None
 
-
-    async def setup(self):
-        await self.execute(
-            """CREATE TABLE IF NOT EXISTS users(
-            user_id INTEGER PRIMARY KEY,
-            Giveway_id INTEGER DEFAULT 0,
-            Server_id INTEGER DEFAULT 0,
-            Mesaage_id INTEGER DEFAULT 0,
-            )"""
+    def create_giveaway_embed(self, giveaway_name):
+        embed_color = discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        return discord.Embed(
+            title=f"🎉 Giveaway: {giveaway_name}",
+            description=f"You can win {giveaway_name}!",
+            color=embed_color
         )
 
-
-class giveway(ezcord.Cog):
-
-
+    async def start_giveaway(self, giveaway_name):
+        self.giveaway_started = True
+        self.giveaway_embed = self.create_giveaway_embed(giveaway_name)
 
     @commands.Cog.listener()
     async def on_ready(self):
         self.bot.add_view(GiveawayView())
 
-    
-
-    @slash_command(description="🎉・Activate the GiveWay system")
-    async def giveway(self, ctx):
-        embed_color = discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-
-        embed= discord.Embed(
-            title="Giveaway start",
-            description="🎉・Start a Giveaway System",
-            color=embed_color 
-        )
-        await ctx.respond(embed=embed, view=GiveawayView())
-
-
+    @slash_command(description="🎉・Activate the Giveaway system")
+    async def giveaway(self, ctx):
+        if not self.giveaway_started:
+            await self.start_giveaway("Your Prize Name")
+            modal = GiveawayModal(title="Create a Giveaway Embed")
+            await ctx.send_modal(modal)
+            await ctx.respond(embed=self.giveaway_embed, view=GiveawayView())
+        else:
+            await ctx.respond("Giveaway has already started.")
 
 def setup(bot):
-    bot.add_cog(giveway(bot))
-
-
+    bot.add_cog(GiveawayCog(bot))
 
 class GiveawayModal(discord.ui.Modal):
-    def __init__(self, *args, **kwargs):
+    def __init__(self,  *args, **kwargs):
         super().__init__(
             discord.ui.InputText(
-                label="Giveway",
-                placeholder="Enter a win",
+                label="Giveaway",
+                placeholder="Enter a prize name",
                 min_length=1,
                 max_length=25,
             ),
-            title="a win?"
+            title="Create a Giveaway"
         )
-
     async def callback(self, interaction):
-        giveway = self.children[0].value
-        giveway_embed = discord.Embed(
-            title=f"You have your {giveway} start",
-            description=f"you give is {giveway}",
-            color=discord.Color.green()
-        )
-        await interaction.response.send_message(embed=giveway_embed, ephemeral=True)
+        giveway_name = self.children[0].value
+        await interaction.response.send_message(f"🎉 Giveaway started: {giveway_name}", ephemeral=True)
 
 class GiveawayView(View):
     def __init__(self):
         super().__init__(timeout=None)
 
+    @discord.ui.button(label="Join the Giveaway", style=discord.ButtonStyle.green, row=1, custom_id="Join_button")
+    async def join_callback(self, button, interaction):
+        if self.cog.giveaway_started:
+            await interaction.response.send_message("You have joined the **Giveaway**", ephemeral=True)
+        else:
+            await interaction.response.send_message("No active giveaway at the moment.", ephemeral=True)
 
-    @discord.ui.button(label="Join the Giveway", style=discord.ButtonStyle.green, row=1, custom_id="Join_button")
-    async def callback(self, button, interaction):
-        await interaction.response.send_message("you are now in the **Giveaway**", ephemeral=True)
-
-
-    @discord.ui.button(label="Leave the Giveway", style=discord.ButtonStyle.red , row=1, custom_id="Leave_button")
-    async def callback1(self, button, interaction):
-        await interaction.response.send_message("you have left the **Giveaway**", ephemeral=True)
+    @discord.ui.button(label="Leave the Giveaway", style=discord.ButtonStyle.red, row=1, custom_id="Leave_button")
+    async def leave_callback(self, button, interaction):
+        await interaction.response.send_message("You have left the **Giveaway**", ephemeral=True)

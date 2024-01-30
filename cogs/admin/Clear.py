@@ -9,7 +9,7 @@ class Clear(commands.Cog):
 
     @slash_command(description="Löscht Nachrichten")
     @discord.guild_only()
-    @commands.has_permissions(administrator=True)
+    @discord.default_permissions(administrator=True)
     async def clear(self, ctx, amount: int):
         if amount > 100:
             await ctx.respond(

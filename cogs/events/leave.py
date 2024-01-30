@@ -23,6 +23,7 @@ class LeaveCard(commands.Cog):
 
     @slash_command()
     @discord.guild_only()
+    @discord.default_permissions(administrator=True)
     async def leave(self, ctx: discord.ApplicationContext, channel: Option(discord.TextChannel)):
         try:
             async with aiosqlite.connect(self.DB) as db:

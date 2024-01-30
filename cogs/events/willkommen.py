@@ -1,16 +1,15 @@
 import datetime
-
+import sqlite3
 import discord
 import ezcord
 import random
 from discord.ext import commands
-from discord.commands import SlashCommandGroup, Option
-
+from discord.commands import SlashCommandGroup
 
 
 class WelcomeDB(ezcord.DBHandler):
     def __init__(self):
-        super().__init__("data/db/wlc.db")
+        super().__init__("data/db//wlc.db")
 
     async def setup(self):
         await self.exec("""
@@ -19,9 +18,16 @@ class WelcomeDB(ezcord.DBHandler):
         channel_id INTEGER DEFAULT 0,
         title TEXT,
         description TEXT,
-        enabled TEXT DEFAULT Off
+        enabled TEXT DEFAULT Off,
+        welcome_role INTEGER DEFAULT 0
         )
         """)
+
+    async def add_welcome_role(self, server_id, role_id):
+        await self.exec("UPDATE servers SET welcome_role = ? WHERE server_id = ?", role_id, server_id)
+
+    async def get_welcome_role(self, server_id):
+        return await self.one("SELECT welcome_role FROM servers WHERE server_id = ?", server_id)
 
     async def enable(self, server_id, channel_id, enabled):
         async with self.start() as cursor:
@@ -30,7 +36,8 @@ class WelcomeDB(ezcord.DBHandler):
             await self.exec("UPDATE servers SET enabled = ? WHERE server_id = ?", enabled, server_id)
 
     async def disable(self, server_id, enabled):
-        await self.exec("UPDATE servers SET enabled = ? WHERE server_id = ?", enabled, server_id)
+        async with self.start() as cursor:
+            await self.exec("UPDATE servers SET enabled = ? WHERE server_id = ?", enabled, server_id)
 
     async def check_enabled(self, server_id):
         return await self.one("SELECT enabled FROM servers WHERE server_id = ?", server_id)
@@ -42,7 +49,7 @@ class WelcomeDB(ezcord.DBHandler):
         await self.exec("INSERT INTO servers (server_id) VALUES (?)", server_id)
 
     async def fix(self, server_id):
-        await self.exec("INSERT INTO servers (server_id) VALUES (?)", server_id,)
+        await self.exec("INSERT OR IGNORE INTO servers (server_id) VALUES (?)", server_id)
 
 db = WelcomeDB()
 
@@ -69,6 +76,15 @@ class WelcomeSystem(ezcord.Cog):
                 ]
                 welcome_phrase = random.choice(welcome_phrases)
                 timestamp = f"🗓️ Am {datetime.datetime.now().strftime('%d.%m.%Y')} um {datetime.datetime.now().strftime('%H:%M')}"
+
+                # Hier wird die Rolle aus der Datenbank abgerufen
+                role_id = await db.get_welcome_role(server_id)
+
+                if role_id:
+                    role = member.guild.get_role(role_id)
+                    if role:
+                        await member.add_roles(role)
+
                 embed = discord.Embed(
                     title=f"👋 Willkommen {member.display_name}!",
                     description=welcome_phrase,
@@ -79,16 +95,22 @@ class WelcomeSystem(ezcord.Cog):
                     embed.set_thumbnail(url=member.display_avatar)
                 except:
                     pass
-                ## TODO: Embed bearbeitbar in einem extra Menü
+
                 await channel.send(embed=embed, content=member.mention)
             except:
                 return
         elif status == "Off":
             return
 
-    @welcome.command(description="👋・Aktiviere das Wilkommens-System")
-    async def setup(self, ctx: discord.ApplicationContext):
-        status = await db.check_enabled(ctx.guild.id)
+
+
+    @welcome.command(description="👋・Aktiviere das Willkommens-System")
+    @discord.default_permissions(administrator=True)
+    @discord.guild_only()
+    async def setup(self, ctx, role: discord.Role):
+        status = await db.fix(ctx.guild.id)
+        if status == None:
+            status = "Off"
         if status == "Off":
             embed = discord.Embed(
                 color=discord.Color.blue(),
@@ -99,6 +121,8 @@ class WelcomeSystem(ezcord.Cog):
                 embed.set_thumbnail(url=ctx.guild.icon)
             except:
                 pass
+            await db.add_welcome_role(ctx.guild.id, role.id)
+
             await ctx.respond(embed=embed, view=WlcChannelSelect(ctx, self.bot))
         else:
             await ctx.respond(
@@ -106,22 +130,24 @@ class WelcomeSystem(ezcord.Cog):
                 ephemeral=True)
 
     @welcome.command(description="👋・Deaktiviere das Willkommens-System")
+    @discord.default_permissions(administrator=True)
+    @discord.guild_only()
     async def stop(self, ctx: discord.ApplicationContext):
-        status = await db.check_enabled(ctx.guild.id)
-        if status == "On":
+        await ctx.defer()
+        check_enabled = await db.check_enabled(ctx.guild.id)
+        if check_enabled == "On": 
             await db.disable(ctx.guild.id, "Off")
             embed = discord.Embed(
                 title="👋 Willkommens-System",
                 description=f"**Das Willkommens-System ist nun ausgeschaltet!**\n\n"
-                            f"Aktiviere es wieder mit {self.bot.get_cmd('welcome setup')}",
+                            f"Aktiviere es wieder mit {self.bot.get_cmd('welcome setup')} ",
                 color=discord.Color.brand_green()
             )
             try:
-                embed.set_thumbnail(url=ctx.user.display_avatar)
+                embed.set_thumbnail(url=ctx.guild.icon)
             except:
-                await ctx.respond(embed=embed)
-            await ctx.respond(embed=embed)
-        elif status == "Off":
+                pass
+        else:  
             embed = discord.Embed(
                 title="👋 Willkommens-System",
                 description=f"**Das Willkommens-System ist bereits ausgeschaltet!**\n\n"
@@ -131,8 +157,10 @@ class WelcomeSystem(ezcord.Cog):
             try:
                 embed.set_thumbnail(url=ctx.user.display_avatar)
             except:
-                await ctx.respond(embed=embed)
-            await ctx.respond(embed=embed)
+                pass
+        await ctx.respond(embed=embed)
+
+
 
 
 def setup(bot: discord.Bot):
@@ -162,29 +190,6 @@ class WlcChannelSelect(discord.ui.View):
             )
             await interaction.message.edit(embed=embed, view=None)
             await db.enable(server_id=interaction.guild.id, channel_id=select.values[0].id, enabled="On")
+
         else:
             await interaction.response.send_message("> **Du bist nicht berechtigt, diese View zu nutzen!**", ephemeral=True)
-
-    @discord.ui.role_select(
-        placeholder="Triff eie Auswahl",
-        custom_id="embedSelect",
-        min_values=1,
-        max_values=1,
-    )
-    async def role_select(self, select, interaction: discord.Interaction):
-        if self.ctx.user.id == interaction.user.id:
-            embed = discord.Embed(
-                title="👋 role-System",
-                description=f"*Du hast eine role gemacht**\n\n"
-                            f"Deaktiviere es wieder mit {self.bot.get_cmd('role stop')}",
-                color=discord.Color.brand_green()
-            )
-            await interaction.message.edit(embed=embed, view=None)
-            await db.enable(server_id=interaction.guild.id, channel_id=select.values[0].id, enabled="On")
-        else:
-            await interaction.response.send_message("> **Du bist nicht berechtigt, diese View zu nutzen!**", ephemeral=True)
-
-
-
-
-

@@ -9,7 +9,7 @@ class Embed(commands.Cog):
 
     @slash_command(description="Erstelle ein Embed")
     @discord.guild_only()
-    @commands.has_permissions(administrator=True)
+    @discord.default_permissions(administrator=True)
     async def embed(self, ctx):
         modal = Modal(bot=self.bot, title="Erstelle ein Embed")
         await ctx.send_modal(modal)

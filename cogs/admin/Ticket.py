@@ -24,7 +24,7 @@ class Ticket(commands.Cog):
 
     @slash_command()
     @discord.guild_only()
-    @commands.has_permissions(administrator=True)
+    @discord.default_permissions(administrator=True)
     async def ticket(self, ctx):
         embed = discord.Embed(
             title="Ticket",
