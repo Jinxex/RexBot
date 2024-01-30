@@ -1,86 +1,171 @@
+import datetime
+
 import discord
-import aiosqlite
-from discord.commands import slash_command, Option
+import ezcord
+import random
 from discord.ext import commands
+from discord.commands import SlashCommandGroup, Option
+import emoji
 
 
-class WelcomeCard(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.DB = "welcome.db"
+class WelcomeDB(ezcord.DBHandler):
+    def __init__(self):
+        super().__init__("data/db/wlc.db")
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        async with aiosqlite.connect(self.DB) as db:
-            await db.execute(
-                """CREATE TABLE IF NOT EXISTS welcome (
-                    guild_id INTEGER,
-                    welcome_channel INTEGER,
-                    role_id INTEGER
-                )"""
-            )
+    async def setup(self):
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS servers (
+        server_id INTEGER PRIMARY KEY,
+        channel_id INTEGER DEFAULT 0,
+        title TEXT,
+        description TEXT,
+        enabled TEXT DEFAULT Off
+        )
+        """)
 
-    @slash_command()
-    @discord.guild_only()
-    async def welcome_setup(
-        self, ctx: discord.ApplicationContext, channel: Option(discord.TextChannel), role_name: Option(discord.Role) 
+    async def enable(self, server_id, channel_id, enabled):
+        async with self.start() as cursor:
+            await self.exec("INSERT OR IGNORE INTO servers (server_id) VALUES (?)", server_id)
+            await self.exec("UPDATE servers SET channel_id = ? WHERE server_id = ?", channel_id, server_id)
+            await self.exec("UPDATE servers SET enabled = ? WHERE server_id = ?", enabled, server_id)
 
-    ):
-        async with aiosqlite.connect(self.DB) as db:
-            cursor = await db.execute(
-                "SELECT * FROM welcome WHERE guild_id = ?", (ctx.guild.id,)
-            )
-            entry = await cursor.fetchone()
+    async def disable(self, server_id, enabled):
+        await self.exec("UPDATE servers SET enabled = ? WHERE server_id = ?", enabled, server_id)
 
-            if entry:
-                owner = ctx.guild.owner
-                if owner:
-                    await owner.send("Der Willkommens-Setup wurde bereits für diesen Server durchgeführt. Schreiben Sie dem littxle_, weil Sie den falschen Kanal oder die falsche Rolle eingegeben haben!")
-                    await ctx.defer(ephemeral=True)
-                    await ctx.respond("look at DM!", ephemeral=True)
-                return
-            
+    async def check_enabled(self, server_id):
+        return await self.one("SELECT enabled FROM servers WHERE server_id = ?", server_id)
 
-            await db.execute(
-                "INSERT INTO welcome VALUES (?,?,?)", (ctx.guild.id, channel.id, role_name.id)
-            )
+    async def channel_id(self, server_id):
+        return await self.one("SELECT channel_id FROM servers WHERE server_id = ?", server_id)
 
-            await db.commit()
-            await ctx.defer(ephemeral=True)
-            await ctx.respond(f"✅ Willkommenskanal auf {channel.mention} und Rollenname auf {role_name.mention} gesetzt", ephemeral=True)
+    async def add_to_db(self, server_id):
+        await self.exec("INSERT INTO servers (server_id) VALUES (?)", server_id)
+
+    async def fix(self, server_id):
+        await self.exec("INSERT INTO servers (server_id) VALUES (?)", server_id,)
+
+db = WelcomeDB()
 
 
-
+class WelcomeSystem(ezcord.Cog):
+    welcome = SlashCommandGroup("welcome")
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        async with aiosqlite.connect(self.DB) as db:
-            cursor = await db.execute(
-                "SELECT * FROM welcome WHERE guild_id = ?", (member.guild.id,)
+        server_id = member.guild.id
+        try:
+            status = await db.check_enabled(server_id)
+        except:
+            return
+
+        if status == "On":
+            channel_id = await db.channel_id(server_id)
+            try:
+                channel = member.guild.get_channel(channel_id)
+                welcome_phrases = [
+                    f"{member.mention} gehört nun auch zur Crew!",
+                    f"{member.mention} hat die richtige Entscheidung getroffen!",
+                    f"Wir heißen {member.mention} herzlich auf **{member.guild.name}** willkommen!"
+                ]
+                welcome_phrase = random.choice(welcome_phrases)
+                timestamp = f"🗓️ Am {datetime.datetime.now().strftime('%d.%m.%Y')} um {datetime.datetime.now().strftime('%H:%M')}"
+                embed = discord.Embed(
+                    title=f"👋 Willkommen {member.display_name}!",
+                    description=welcome_phrase,
+                    color=discord.Color.random()
+                )
+                embed.set_footer(text=timestamp)
+                try:
+                    embed.set_thumbnail(url=member.display_avatar)
+                except:
+                    pass
+                ## TODO: Embed bearbeitbar in einem extra Menü
+                await channel.send(embed=embed, content=member.mention)
+            except:
+                return
+        elif status == "Off":
+            return
+
+    @welcome.command(description='fix')
+    async def fix(self, ctx):
+        await db.fix(ctx.guild.id)
+        await ctx.respond('Fixed!')
+
+
+    @welcome.command(description="👋・Aktiviere das Wilkommens-System")
+    async def setup(self, ctx: discord.ApplicationContext):
+        status = await db.check_enabled(ctx.guild.id)
+        if status == "Off":
+            embed = discord.Embed(
+                color=emoji.color_blue,
+                title="👋 Willkommens-System",
+                description="Wähle bitte im **Channel-Select** den Kanal aus, in welchen Willkommensnachrichten gesendet werden sollen"
             )
-            entry = await cursor.fetchone()
+            try:
+                embed.set_thumbnail(url=ctx.guild.icon)
+            except:
+                pass
+            await ctx.respond(embed=embed, view=WlcChannelSelect(ctx, self.bot))
+        else:
+            await ctx.respond(
+                f"> **Bitte schalte das System erst mit {self.bot.get_cmd('welcome stop')} aus, und nutze dann diesen Command erneut!**",
+                ephemeral=True)
 
-            if entry:
-                channel_id, role_id = entry[1], entry[2]
-                channel = self.bot.get_channel(channel_id)
-                role = member.guild.get_role(role_id)
+    @welcome.command(description="👋・Deaktiviere das Willkommens-System")
+    async def stop(self, ctx: discord.ApplicationContext):
+        status = await db.check_enabled(ctx.guild.id)
+        if status == "On":
+            await db.disable(ctx.guild.id, "Off")
+            embed = discord.Embed(
+                title="👋 Willkommens-System",
+                description=f"**Das Willkommens-System ist nun ausgeschaltet!**\n\n"
+                            f"Aktiviere es wieder mit {self.bot.get_cmd('welcome setup')}",
+                color=discord.Color.brand_green()
+            )
+            try:
+                embed.set_thumbnail(url=ctx.user.display_avatar)
+            except:
+                await ctx.respond(embed=embed)
+        elif status == "Off":
+            embed = discord.Embed(
+                title="👋 Willkommens-System",
+                description=f"**Das Willkommens-System ist bereits ausgeschaltet!**\n\n"
+                            f"Aktiviere es mit {self.bot.get_cmd('welcome setup')}",
+                color=discord.Color.brand_red()
+            )
+            try:
+                embed.set_thumbnail(url=ctx.user.display_avatar)
+            except:
+                await ctx.respond(embed=embed)
 
-                if channel and role:
-                    embed = discord.Embed(
-                        description=f"Hey {member.mention} und herzlich willkommen auf dem Discord-Server von **{member.guild.name}!**\n\n\n★ Du bist das {member.guild.member_count} Mitglied auf diesem Server!",
-                        color=discord.Color.red(),
-                    )
-                    embed.set_author(
-                        icon_url=member.guild.icon.url, name=member.guild.name
-                    )
-                    embed.set_image(
-                        url="https://tse1.mm.bing.net/th?id=OIP.mJ4zvJuNlVIy_ryGKf_YpgHaC9&pid=Api&P=0&h=180"
-                    )
 
-                    await channel.send(member.mention, embed=embed)
-                    await member.add_roles(role)
+def setup(bot: discord.Bot):
+    bot.add_cog(WelcomeSystem(bot))
 
 
+class WlcChannelSelect(discord.ui.View):
+    def __init__(self, ctx, bot):
+        self.ctx = ctx
+        self.bot = bot
+        super().__init__(timeout=30, disable_on_timeout=True)
 
-def setup(bot):
-    bot.add_cog(WelcomeCard(bot))
+    @discord.ui.channel_select(
+        placeholder="Triff eine Auswahl",
+        custom_id="ChannelSelect",
+        min_values=1,
+        max_values=1,
+        channel_types=[discord.ChannelType.text]
+    )
+    async def channel_select(self, select, interaction: discord.Interaction):
+        if self.ctx.user.id == interaction.user.id:
+            embed = discord.Embed(
+                title="👋 Willkommens-System",
+                description=f"**Das Willkommens-System ist nun aktiviert!**\n\n"
+                            f"Deaktiviere es wieder mit {self.bot.get_cmd('welcome stop')}",
+                color=discord.Color.brand_green()
+            )
+            await interaction.message.edit(embed=embed, view=None)
+            await db.enable(server_id=interaction.guild.id, channel_id=select.values[0].id, enabled="On")
+
+        else:
+            await interaction.response.send_message("> **Du bist nicht berechtigt, diese View zu nutzen!**", ephemeral=True)

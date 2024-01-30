@@ -16,7 +16,7 @@ intents = discord.Intents.all()
 
 bot = ezcord.Bot(
     intents=intents,
-    debug_guilds=[1190258614640836659],
+    debug_guilds=[1199483093728374784],
 )
 
 
@@ -28,7 +28,7 @@ async def on_ready():
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.streaming,
-            name="cloud bot",
+            name="Flexii",
             url="https://twitch.tv/littxle_"
         ),
         status=discord.Status.idle,

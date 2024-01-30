@@ -9,7 +9,7 @@ from datetime import datetime
 
 class sternDB(ezcord.DBHandler):
     def __init__(self):
-        super().__init__("database/stern.db")
+        super().__init__("data/db//stern.db")
 
 
     async def setup(self):

@@ -8,7 +8,7 @@ from discord.commands import slash_command
 class AutoDeleteCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db_connection = sqlite3.connect("database/autodelete.db")
+        self.db_connection = sqlite3.connect("data/db//autodelete.db")
         self.db_cursor = self.db_connection.cursor()
         self.wartezeit = None
         self.create_table()
