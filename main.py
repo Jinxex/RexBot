@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import asyncio
 import re
 import colorama
-from discord.ext import commands
+from discord.commands import Option
 from colorama import Fore
 import ezcord
 from discord import Color
@@ -16,11 +16,8 @@ intents = discord.Intents.all()
 
 bot = ezcord.Bot(
     intents=intents,
-    debug_guilds=[1199483093728374784],
+    debug_guilds=[1202245624553279578],
 )
-
-
-
 
 
 @bot.event
@@ -33,6 +30,7 @@ async def on_ready():
         ),
         status=discord.Status.idle,
     )
+
 
 
 
