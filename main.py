@@ -16,7 +16,6 @@ intents = discord.Intents.all()
 
 bot = ezcord.Bot(
     intents=intents,
-    debug_guilds=[1202245624553279578],
 )
 
 
@@ -45,7 +44,8 @@ if __name__ == "__main__":
     bot.load_cogs("./cogs/events", subdirectories=True, custom_log_level="events")
     bot.load_cogs("./cogs/tempvoice", subdirectories=True, custom_log_level="tempvoice")
     bot.load_cogs("./cogs/giveway", subdirectories=True, custom_log_level="giveway")
-    bot.load_cogs("./cogs/test", subdirectories=True, custom_log_level="test")
-                
+
+
     load_dotenv()
+    
     bot.run()
