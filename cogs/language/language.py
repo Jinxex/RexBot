@@ -1,7 +1,25 @@
 import discord
 from discord.commands import slash_command, Option
 import ezcord
+import sqlite3
+import json
 
+class LanguageManager:
+    def __init__(self, default_language='🇬🇧 English'):
+        self.default_language = default_language
+        self.translations = {}
+        self.load_translations()
+
+    def load_translations(self):
+        try:
+            with open('translations.json', 'r', encoding='utf-8') as file:
+                self.translations = json.load(file)
+        except FileNotFoundError:
+            print("Translations file not found.")
+
+    def get_translation(self, key):
+        language_translations = self.translations.get(self.default_language, {})
+        return language_translations.get(key, f"Translation not found for key: {key}")
 
 class LanguageDB(ezcord.DBHandler):
     def __init__(self):
@@ -15,15 +33,20 @@ class LanguageDB(ezcord.DBHandler):
             )"""
         )
 
+    async def get_server_language(self, server_id):
+        result = await self.execute("SELECT language FROM servers WHERE server_id=?", (server_id,))
+        return result['language'] if result else None
 
+    async def set_server_language(self, server_id, language):
+        await self.execute(
+            "INSERT OR REPLACE INTO servers (server_id, language) VALUES (?, ?)",
+            (server_id, language)
+        )
+
+language_manager = LanguageManager()
 db = LanguageDB()
 
 class Language(ezcord.Cog):
-
-    async def get_server_language(self, server_id):
-        result = await db.execute("SELECT language FROM servers WHERE server_id=?", (server_id,))
-        return result['language'] if result else None
-
     @slash_command()
     @discord.guild_only()
     @discord.default_permissions(administrator=True)
@@ -32,16 +55,14 @@ class Language(ezcord.Cog):
         ctx,
         language: Option(str, description="Choose the language", choices=["🇩🇪 Deutsch", "🇬🇧 English"])
     ):
-        await db.execute(
-            "INSERT OR REPLACE INTO servers (server_id, language) VALUES (?, ?)",
-            (ctx.guild.id, language)
-        )
+        server_id = ctx.guild.id
+        await db.set_server_language(server_id, language)
+        language_manager.default_language = language
         await ctx.defer(ephemeral=True)
         await ctx.respond(embed=self.create_language_embed(ctx.author, language, ctx.guild), ephemeral=True)
 
     async def get_server_language(self, server_id):
-        result = await db.execute("SELECT language FROM servers WHERE server_id=?", (server_id,))
-        return result['language'] if result else None
+        return await db.get_server_language(server_id) or '🇬🇧 English'
 
     def create_language_embed(self, user, language, guild):
         embed = discord.Embed(
