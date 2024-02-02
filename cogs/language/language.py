@@ -1,25 +1,10 @@
 import discord
 from discord.commands import slash_command, Option
 import ezcord
-import sqlite3
 import json
 
-class LanguageManager:
-    def __init__(self, default_language='🇬🇧 English'):
-        self.default_language = default_language
-        self.translations = {}
-        self.load_translations()
 
-    def load_translations(self):
-        try:
-            with open('translations.json', 'r', encoding='utf-8') as file:
-                self.translations = json.load(file)
-        except FileNotFoundError:
-            print("Translations file not found.")
 
-    def get_translation(self, key):
-        language_translations = self.translations.get(self.default_language, {})
-        return language_translations.get(key, f"Translation not found for key: {key}")
 
 class LanguageDB(ezcord.DBHandler):
     def __init__(self):
@@ -43,10 +28,11 @@ class LanguageDB(ezcord.DBHandler):
             (server_id, language)
         )
 
-language_manager = LanguageManager()
+
 db = LanguageDB()
 
 class Language(ezcord.Cog):
+
     @slash_command()
     @discord.guild_only()
     @discord.default_permissions(administrator=True)
@@ -57,7 +43,6 @@ class Language(ezcord.Cog):
     ):
         server_id = ctx.guild.id
         await db.set_server_language(server_id, language)
-        language_manager.default_language = language
         await ctx.defer(ephemeral=True)
         await ctx.respond(embed=self.create_language_embed(ctx.author, language, ctx.guild), ephemeral=True)
 
