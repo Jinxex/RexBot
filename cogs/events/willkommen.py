@@ -5,7 +5,51 @@ import ezcord
 import random
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
-from utils.db import WelcomeDB
+
+
+class WelcomeDB(ezcord.DBHandler):
+    def __init__(self):
+        super().__init__("data/db//wlc.db")
+
+    async def setup(self):
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS servers (
+        server_id INTEGER PRIMARY KEY,
+        channel_id INTEGER DEFAULT 0,
+        title TEXT,
+        description TEXT,
+        enabled TEXT DEFAULT Off,
+        welcome_role INTEGER DEFAULT 0
+        )
+        """)
+
+    async def add_welcome_role(self, server_id, role_id):
+        await self.exec("UPDATE servers SET welcome_role = ? WHERE server_id = ?", role_id, server_id)
+
+    async def get_welcome_role(self, server_id):
+        return await self.one("SELECT welcome_role FROM servers WHERE server_id = ?", server_id)
+
+    async def enable(self, server_id, channel_id, enabled):
+        async with self.start() as cursor:
+            await self.exec("INSERT OR IGNORE INTO servers (server_id) VALUES (?)", server_id)
+            await self.exec("UPDATE servers SET channel_id = ? WHERE server_id = ?", channel_id, server_id)
+            await self.exec("UPDATE servers SET enabled = ? WHERE server_id = ?", enabled, server_id)
+
+    async def disable(self, server_id, enabled):
+        async with self.start() as cursor:
+            await self.exec("UPDATE servers SET enabled = ? WHERE server_id = ?", enabled, server_id)
+
+    async def check_enabled(self, server_id):
+        return await self.one("SELECT enabled FROM servers WHERE server_id = ?", server_id)
+
+    async def channel_id(self, server_id):
+        return await self.one("SELECT channel_id FROM servers WHERE server_id = ?", server_id)
+
+    async def add_to_db(self, server_id):
+        await self.exec("INSERT INTO servers (server_id) VALUES (?)", server_id)
+
+    async def fix(self, server_id):
+        await self.exec("INSERT OR IGNORE INTO servers (server_id) VALUES (?)", server_id)
 
 db = WelcomeDB()
 
