@@ -20,7 +20,13 @@ db = LanguageDB()
 
 class Language(ezcord.Cog):
 
+    async def get_server_language(self, server_id):
+        result = await db.execute("SELECT language FROM servers WHERE server_id=?", (server_id,))
+        return result['language'] if result else None
+
     @slash_command()
+    @discord.guild_only()
+    @discord.default_permissions(administrator=True)
     async def set(
         self,
         ctx,
@@ -30,7 +36,7 @@ class Language(ezcord.Cog):
             "INSERT OR REPLACE INTO servers (server_id, language) VALUES (?, ?)",
             (ctx.guild.id, language)
         )
-
+        await ctx.defer(ephemeral=True)
         await ctx.respond(embed=self.create_language_embed(ctx.author, language, ctx.guild), ephemeral=True)
 
     async def get_server_language(self, server_id):
