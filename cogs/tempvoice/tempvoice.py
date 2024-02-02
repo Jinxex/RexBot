@@ -2,38 +2,7 @@ import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, Option
 import ezcord
-
-class tempvoiceDB(ezcord.DBHandler):
-    def __init__(self):
-        super().__init__("data/db//tempvoice.db")
-
-    async def setup(self):
-        await self.execute(
-            """CREATE TABLE IF NOT EXISTS users(
-            server_id INTEGER PRIMARY KEY,
-            Category_id INTEGER DEFAULT 0,
-            VoiceChannel_id INTEGER DEFAULT 0,
-            Channel_id INTEGER DEFAULT 0
-            )"""
-        )
-
-    async def get_channel(self, guild_id):
-        await self.one("SELECT VoiceChannel_id FROM users WHERE server_id = ?",(guild_id))
-    
-    async def get_txtchannel(self, txt_channel,guild_id):
-        async with self.start() as cursor:
-            await cursor.execute("INSERT OR IGNORE INTO users (server_id) VALUES (?)", guild_id)
-            await cursor.execute(f"UPDATE users SET Channel_id = ? WHERE server_id = ?", txt_channel,guild_id)
-
-
-    async def get_voice(self, guild_id, voicechannel_id, category_id):
-        async with self.start() as cursor:
-            # Überprüfe, ob es einen Datensatz für den Server gibt und lege ihn an, falls nicht vorhanden
-            await cursor.execute("INSERT OR IGNORE INTO users (server_id) VALUES (?)", (guild_id,))
-
-            # Aktualisiere die VoiceChannel_id und Category_id für den Server
-            await cursor.execute("UPDATE users SET VoiceChannel_id = ?, Category_id = ? WHERE server_id = ?", (voicechannel_id, category_id, guild_id))
-
+from utils.db import tempvoiceDB
 
 
 
