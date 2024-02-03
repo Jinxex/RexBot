@@ -14,7 +14,7 @@ class LanguageDB(ezcord.DBHandler):
         await self.execute(
             """CREATE TABLE IF NOT EXISTS servers(
             server_id INTEGER PRIMARY KEY,
-            language TEXT DEFAULT '🇬🇧 English'
+            language TEXT DEFAULT 'English'
             )"""
         )
 
@@ -39,7 +39,7 @@ class Language(ezcord.Cog):
     async def set(
         self,
         ctx,
-        language: Option(str, description="Choose the language", choices=["🇩🇪 Deutsch", "🇬🇧 English"])
+        language: Option(str, description="Choose the language", choices=["Deutsch", "English"])
     ):
         server_id = ctx.guild.id
         await db.set_server_language(server_id, language)
@@ -47,7 +47,7 @@ class Language(ezcord.Cog):
         await ctx.respond(embed=self.create_language_embed(ctx.author, language, ctx.guild), ephemeral=True)
 
     async def get_server_language(self, server_id):
-        return await db.get_server_language(server_id) or '🇬🇧 English'
+        return await db.get_server_language(server_id) or 'English'
 
     def create_language_embed(self, user, language, guild):
         embed = discord.Embed(
@@ -58,14 +58,7 @@ class Language(ezcord.Cog):
         embed.set_footer(text=f"Bot Language Settings | Server: {guild.name}")
 
         return embed
-
-    def get_language_emoji(self, language):
-        emoji_mapping = {
-            "🇩🇪 Deutsch": "Deutsch-Emoji",
-            "🇬🇧 English": "English-Emoji",
-        }
-
-        return emoji_mapping.get(language, "Default-Emoji")
+    
 
 def setup(bot):
     bot.add_cog(Language(bot))

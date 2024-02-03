@@ -1,7 +1,0 @@
-{
-    "wilk": "Hello!",
-    "help": "Here are the available commands:",
-    "command_not_found": "Command not found.",
-    "invalid_argument": "Invalid argument. Please check the syntax."
-  }
-  

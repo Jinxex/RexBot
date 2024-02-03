@@ -34,7 +34,7 @@ class avatar(commands.Cog):
             anderer_embed.set_image(url=member.avatar.url)
             anderer_embed.set_footer(
                 icon_url=self.bot.user.avatar.url,
-                text="|  Created by Dynamo Development",
+                text="|  Created by Flexii Development",
             )
             await ctx.respond(embed=anderer_embed)
 
