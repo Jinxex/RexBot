@@ -6,7 +6,7 @@ from discord.ext import commands
 class LeaveCard(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.DB = "leave.db"
+        self.DB = "db/leave.db"
 
     @commands.Cog.listener()
     async def on_ready(self):

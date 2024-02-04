@@ -26,9 +26,10 @@ class Giveaway(commands.Cog):
     giveway = SlashCommandGroup("giveway")
 
     @giveway.command(description="Start a giveaway")
-    async def start(self, ctx:discord.ApplicationContext, time: str):
+    async def start(self, ctx: discord.ApplicationContext, time: str, description="Example 10s, 10m, 10h, 10d"):
         modal = Modal(title="Create a giveaway", time=time)
         await ctx.send_modal(modal)
+
 
 
 
@@ -78,7 +79,6 @@ class Modal(discord.ui.Modal):
         time = self.time
         embed = discord.Embed(title=self.children[0].value, description=self.children[1].value, color=discord.Color.gold())
         embed.add_field(name="👥 Participants", value=str(self.participants_count), inline=False)
-        embed.add_field(name="🎁 Participate", value="Click on the button below to join the giveaway.", inline=False)
         embed.add_field(name="⏰ Ends in", value=ezcord.times.dc_timestamp(time, "R"), inline=False)
         embed.set_footer(text=f"🎉 Giveaway hosted by {interaction.user.name}")
         b = datetime.datetime.now()
@@ -104,7 +104,7 @@ class Modal(discord.ui.Modal):
                     embed = discord.Embed(title="🚫 Giveaway canceled", description="Nobody joined the giveaway.", color=discord.Color.red())
                     n = datetime.datetime.now()
                     embed.add_field(name="🎉 Giveaway Informations",
-                                    value=f"Hosted by {interaction.user.mention}\nStarted at {discord.utils.format_dt(b, 'R')}\nEnded at {discord.utils.format_dt(n, 'R')}\n\nParticipants: {teilnehmer}")
+                                    value=f"Hosted by {interaction.user.mention}\n 🛫• Started at {discord.utils.format_dt(b, 'R')}\n 🔚• Ended at {discord.utils.format_dt(n, 'R')}\n\n⭐• Participants: {teilnehmer}")
                     await msg.edit(content="", embed=embed, view=None)
                     await deleting.delete()
                 else:
@@ -122,13 +122,15 @@ class Modal(discord.ui.Modal):
                                 colour=discord.Color.green()
                             )
                             n = datetime.datetime.now()
-                            embed.add_field(name="🎉 Giveaway Informations", value=f"Hosted by {interaction.user.mention}\n🛫 Started at {discord.utils.format_dt(b, 'R')}\n 🔚Ended at {discord.utils.format_dt(n, 'R')}\n\nParticipants: {teilnehmer}")
+                            embed.add_field(name="🎉 Giveaway Informations", value=f"Hosted by {interaction.user.mention}\n🛫 • Started at {discord.utils.format_dt(b, 'R')}\n 🔚• Ended at {discord.utils.format_dt(n, 'R')}\n\n⭐• Participants: {teilnehmer}")
                             gewinner_message = await interaction.channel.send(embed=embed)
-                            embed2 = discord.Embed(title="🎉 Giveaway ended", description="See below!", color=discord.Color.purple())
+                            embed2 = discord.Embed(title="🎉 Giveaway ended", description="👋• See below!", color=discord.Color.purple())
                             await deleting.delete()
                             await msg.edit(content=f"🎉 <@{gewinner2}>", embed=embed2, view=None)
                             await discord.utils.sleep_until(gewinner_message.created_at + datetime.timedelta(hours=48))
                             await gewinner_message.delete()
+
+
 class GvwButton(discord.ui.View):
     def __init__(self, msg,msge, modal,time):
         super().__init__(timeout=None)
@@ -150,7 +152,6 @@ class GvwButton(discord.ui.View):
             print(f"DEBUG: Participants count increased to {self.modal.participants_count}")
             embed = discord.Embed(title=self.modal.children[0].value, description=self.modal.children[1].value, color=discord.Color.gold())
             embed.add_field(name="👥 Participants", value=str(self.modal.participants_count), inline=False)
-            embed.add_field(name="🎁 Participate", value="Click on the button below to join the giveaway.", inline=False)
             embed.add_field(name="⏰ Ends in", value=ezcord.times.dc_timestamp(self.time, "R"), inline=False)
             embed.set_footer(text=f"🎉 Giveaway hosted by {interaction.user.name}")
             await self.msg2.edit(embed=embed, view=None)
@@ -172,10 +173,8 @@ class LeaveButton(discord.ui.View):
     @discord.ui.button(label="🚫 Leave Giveaway", style=discord.ButtonStyle.red, custom_id="leave")
     async def button_callback(self, button, interaction):
         self.modal.participants_count -= 1
-        print(f"DEBUG: Participants count increased to {self.modal.participants_count}")
         embed = discord.Embed(title=self.modal.children[0].value, description=self.modal.children[1].value, color=discord.Color.gold())
         embed.add_field(name="👥 Participants", value=str(self.modal.participants_count), inline=False)
-        embed.add_field(name="🎁 Participate", value="Click on the button below to join the giveaway.", inline=False)
         embed.add_field(name="⏰ Ends in", value=ezcord.times.dc_timestamp(self.time, "R"), inline=False)
         embed.set_footer(text=f"🎉 Giveaway hosted by {interaction.user.name}")
         await self.msg2.edit(embed=embed, view=None)
@@ -185,4 +184,6 @@ class LeaveButton(discord.ui.View):
             DELETE FROM giveaway WHERE user_id = ? and giveaway_id = ?
             """, (interaction.user.id, self.msg))
             await db.commit()
-            
+
+
+
