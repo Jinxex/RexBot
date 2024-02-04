@@ -9,7 +9,7 @@ from discord.commands import SlashCommandGroup
 
 class WelcomeDB(ezcord.DBHandler):
     def __init__(self):
-        super().__init__("data/db//wlc.db")
+        super().__init__("db/wlc.db")
 
     async def setup(self):
         await self.exec("""

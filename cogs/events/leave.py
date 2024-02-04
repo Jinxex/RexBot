@@ -42,7 +42,7 @@ class LeaveCard(commands.Cog):
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
         except aiosqlite.Error as e:
-            print(f"Error updating data/db/: {e}")
+            print(f"Error updating db: {e}")
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
@@ -66,7 +66,7 @@ class LeaveCard(commands.Cog):
                     )
                     await channel.send(embed=embed)
         except aiosqlite.Error as e:
-            print(f"Error querying data/db/: {e}")
+            print(f"Error querying db: {e}")
 
 def setup(bot):
     bot.add_cog(LeaveCard(bot))

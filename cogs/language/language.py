@@ -8,7 +8,7 @@ import ezcord
 
 class LanguageDB(ezcord.DBHandler):
     def __init__(self):
-        super().__init__("data/db/language.db")
+        super().__init__("dblanguage.db")
 
     async def setup(self):
         await self.execute(

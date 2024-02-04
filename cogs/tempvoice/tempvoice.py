@@ -5,7 +5,7 @@ import ezcord
 
 class tempvoiceDB(ezcord.DBHandler):
     def __init__(self):
-        super().__init__("data/db//tempvoice.db")
+        super().__init__("db/tempvoice.db")
 
     async def setup(self):
         await self.execute(
