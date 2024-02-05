@@ -7,7 +7,6 @@ options = [
     discord.SelectOption(label="Support Server", emoji="🛠", value="support"),
     discord.SelectOption(label="Invite Bot", emoji="📎", value="invite"),
     discord.SelectOption(label="Server Count", emoji="🌐", value="server"),
-    discord.SelectOption(label="Rate Bot", emoji="⭐", value="rate"),
 ]
 
 class botmenu(commands.Cog):
@@ -28,6 +27,10 @@ class botmenu(commands.Cog):
         )
 
         await ctx.respond(embed=embed, view=view)
+
+
+def setup(bot):
+    bot.add_cog(botmenu(bot))
 
 class BotMenu(discord.ui.Select):
     def __init__(self, bot):
@@ -69,43 +72,20 @@ class BotMenu(discord.ui.Select):
                 description=f"I'm currently in {len(self.bot.guilds)} servers.",
                 color=discord.Color.blue()
             )
-            await interaction.response.send_message(embed=server_embed)
-        elif selected_option == "rate":
-            await self.rate_bot(interaction)
+  
 
-    async def rate_bot(self, interaction: discord.Interaction):
-        await interaction.response.send_message("Please rate the bot on a scale of 1 to 5 stars:\n\n```rate\nYour rating here\n```")
-
-        try:
-            rating_message = await self.bot.wait_for(
-                "message",
-                timeout=300,
-                check=lambda message: message.author == interaction.user and message.channel == interaction.channel
-            )
-
-            try:
-                stars = int(rating_message.content)
-                if 1 <= stars <= 5:
-                    star_text = get_stars(stars)
-                    rating_embed = discord.Embed(
-                        title="⭐ Bot Rating",
-                        description=f"**From:** {interaction.user.mention}\n\n{star_text}",
-                        color=discord.Color.gold()
-                    )
-                    await interaction.followup.send(embed=rating_embed)
-                else:
-                    await interaction.followup.send("Please provide a rating between 1 and 5.")
-            except ValueError:
-                await interaction.followup.send("Invalid rating. Please provide a number between 1 and 5.")
-        except asyncio.TimeoutError:
-            await interaction.followup.send("Sorry, the rating submission timed out. Please try again later.")
-
-def get_stars(stars):
-    if stars == 1:
-        star_text = f"`⭐` Stern"
-    else:
-        star_text = f"`⭐" + " ⭐" * (stars - 1) + f"` Sterne"
-    return star_text
-
-def setup(bot):
-    bot.add_cog(botmenu(bot))
+class botModal(discord.ui.Modal):
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            discord.ui.InputText(
+                label="Bot Feedback",
+                placeholder="Placeholder"
+            ),
+            discord.ui.InputText(
+                label="bot Beschreibung",
+                placeholder="Placeholder",
+                style=discord.InputTextStyle.long
+            ),
+            *args,
+            **kwargs
+        )
