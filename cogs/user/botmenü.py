@@ -1,3 +1,4 @@
+from typing import Self
 import discord
 from discord.ext import commands
 import ezcord
@@ -9,21 +10,26 @@ options = [
     discord.SelectOption(label="Invite Bot", emoji="📎", value="invite"),
     discord.SelectOption(label="Server Count", emoji="🌐", value="server"),
     discord.SelectOption(label="Bot Feedback", emoji="⭐", value="Feedback"),
+    discord.SelectOption(label="Help", emoji="🤖", value="help"),
 ]
 
-class botmenu(ezcord.Cog, emoji="🤖"):
+class BotMenu(ezcord.Cog, emoji="🤖"):
+
     @ezcord.Cog.listener()
     async def on_ready(self):
-        self.bot.add_view(botview())
+        self.bot.add_view(BotView())
 
 
 
-    @slash_command(description="This is an owner menu")
+    @ezcord.Cog.listener()
+    async def on_ready(self):
+        self.bot.add_view(BotMenuSelectView(self.bot))
+
+
+    
+    @slash_command(description="This is an Bot menu")
     async def botinfo(self, ctx):
-        select = BotMenu(bot=self.bot)
-
-        view = discord.ui.View(timeout=None)
-        view.add_item(select)
+        select = BotMenuSelectView(self.bot)
 
         embed = discord.Embed(
             title="🤖 Bot Menu Unlocked 🤖",
@@ -31,25 +37,25 @@ class botmenu(ezcord.Cog, emoji="🤖"):
             color=discord.Color.orange()
         )
 
-        await ctx.respond(embed=embed, view=view)
-
+        await ctx.respond(embed=embed, view=BotMenuSelectView(self.bot))
 
 def setup(bot):
-    bot.add_cog(botmenu(bot))
+    bot.add_cog(BotMenu(bot))
 
-class BotMenu(discord.ui.Select):
-    def __init__(self, bot):
-        super().__init__(
-            min_values=1,
-            max_values=1,
-            placeholder="Select an option",
-            options=options
-        )
-        self.bot = bot
+class BotMenuSelectView(discord.ui.View):
+    def __init__(self, select):
+        super().__init__(timeout=None)
+        self.select = select
 
-    async def callback(self, interaction: discord.Interaction):
-        selected_option = self.values[0]
-
+    @discord.ui.select(
+        custom_id="ka",
+        min_values=1,
+        max_values=2,
+        placeholder="Make a selection",
+        options=options
+    )
+    async def callback(self, select, interaction: discord.Interaction):
+        selected_option = select.values[0]
         if selected_option == "owner":
             owner_embed = discord.Embed(
                 title="👑 Owner Confirmation",
@@ -89,43 +95,51 @@ class BotMenu(discord.ui.Select):
                             "5 ⭐⭐⭐⭐⭐ - Excellent",
                 color=discord.Color.gold()
             )
-            await interaction.response.send_message(embed=feedback_embed, view=botview())
+            await interaction.response.send_message(embed=feedback_embed, view=BotView())
+        elif selected_option == "help":
+            help_embed = discord.Embed(
+                title="🤖 • Help Menu",
+                description="Hey there! If you type /help, you'll see a list of my commands.",
+                color=discord.Color.yellow()
+            )
+            await interaction.response.send_message(embed=help_embed)
 
-class botview(discord.ui.View):
+
+class BotView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
     @discord.ui.button(label="star 1", style=discord.ButtonStyle.gray, emoji="⭐", custom_id="star1_button")
     async def callback1(self, button, interaction):
-        await interaction.response.send_modal(star_modal(title="Give me Feedback", stars="⭐"))
+        await interaction.response.send_modal(StarModal(title="Give me Feedback", stars="⭐"))
 
     @discord.ui.button(label="star 2", style=discord.ButtonStyle.gray, emoji="⭐", custom_id="star2_button")
     async def callback2(self, button, interaction):
-        await interaction.response.send_modal(star_modal(title="Give me Feedback", stars="⭐⭐"))
+        await interaction.response.send_modal(StarModal(title="Give me Feedback", stars="⭐⭐"))
 
     @discord.ui.button(label="star 3", style=discord.ButtonStyle.green, emoji="⭐", custom_id="star3_button")
     async def callback3(self, button, interaction):
-        await interaction.response.send_modal(star_modal(title="Give me Feedback", stars="⭐⭐⭐"))
+        await interaction.response.send_modal(StarModal(title="Give me Feedback", stars="⭐⭐⭐"))
 
     @discord.ui.button(label="star 4", style=discord.ButtonStyle.blurple, emoji="⭐", custom_id="star4_button")
     async def callback4(self, button, interaction):
-        await interaction.response.send_modal(star_modal(title="Give me Feedback", stars="⭐⭐⭐⭐"))
+        await interaction.response.send_modal(StarModal(title="Give me Feedback", stars="⭐⭐⭐⭐"))
 
     @discord.ui.button(label="star 5", style=discord.ButtonStyle.danger, emoji="⭐", custom_id="star5_button")
     async def callback5(self, button, interaction):
-        await interaction.response.send_modal(star_modal(title="Give me Feedback", stars="⭐⭐⭐⭐⭐"))
+        await interaction.response.send_modal(StarModal(title="Give me Feedback", stars="⭐⭐⭐⭐⭐"))
 
-class star_modal(discord.ui.Modal):
-    def __init__(self,  stars, *args, **kwargs):
+class StarModal(discord.ui.Modal):
+    def __init__(self, stars, *args, **kwargs):
         super().__init__(
             discord.ui.InputText(
-                label="Embed Title",
+                label="Feedback",
                 placeholder="Placeholder",
             ),
             discord.ui.InputText(
-                label="Embed Description",
+                label="Feedback Description",
                 placeholder="Placeholder",
-                style=discord.InputTextStyle.long
+                style=discord.InputTextStyle.long,
             ),
             *args,
             **kwargs
@@ -133,14 +147,14 @@ class star_modal(discord.ui.Modal):
         self.stars = stars
 
     async def callback(self, interaction):
-        channel_id = 1204138508256546866
+        channel_id = 1204138508256546866  #deine id
 
         channel = interaction.guild.get_channel(channel_id)
         if channel:
             embed = discord.Embed(
-                title=self.children[0].value,
-                description=f"Stars: {self.stars}",
-                color=discord.Color.green()
+                title = f"📝 {self.children[0].value}",
+                description = f"🌟 {self.children[1].value}, Bewertung: {self.stars} ⭐",
+                color = discord.Color.gold()
             )
             await interaction.response.send_message("Thank you for your feedback, it was sent successfully", ephemeral=True)
             await channel.send(embed=embed)
