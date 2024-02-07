@@ -1,4 +1,4 @@
-from typing import Self
+
 import discord
 from discord.ext import commands
 import ezcord
@@ -29,8 +29,7 @@ class BotMenu(ezcord.Cog, emoji="🤖"):
     
     @slash_command(description="This is an Bot menu")
     async def botinfo(self, ctx):
-        select = BotMenuSelectView(self.bot)
-
+        
         embed = discord.Embed(
             title="🤖 Bot Menu Unlocked 🤖",
             description=f"Welcome to the Bot Menu! Select an option below.",
@@ -43,12 +42,12 @@ def setup(bot):
     bot.add_cog(BotMenu(bot))
 
 class BotMenuSelectView(discord.ui.View):
-    def __init__(self, select):
+    def __init__(self, bot):
         super().__init__(timeout=None)
-        self.select = select
+        self.bot = bot
 
     @discord.ui.select(
-        custom_id="ka",
+        custom_id="haha",
         min_values=1,
         max_values=2,
         placeholder="Make a selection",
@@ -56,6 +55,7 @@ class BotMenuSelectView(discord.ui.View):
     )
     async def callback(self, select, interaction: discord.Interaction):
         selected_option = select.values[0]
+        await interaction.message.edit(view=self)
         if selected_option == "owner":
             owner_embed = discord.Embed(
                 title="👑 Owner Confirmation",

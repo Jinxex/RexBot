@@ -17,9 +17,23 @@ intents = discord.Intents.all()
 bot = ezcord.Bot(
     intents=intents,
     debug_guilds=[1202245624553279578],
-    error_webhook_url=(os.getenv("ERROR_WEBHOOK_URL"))
+    error_webhook_url=(os.getenv("ERROR_WEBHOOK_URL")),
+    language="en"
 )
 
+
+
+@bot.event
+async def on_ready():
+    print('Logged in as {0.user}'.format(bot))
+    try:
+        with open('avatar.gif', 'rb') as avatar:
+            await bot.user.edit(avatar=avatar.read())
+        print('Animated avatar uploaded successfully!')
+    except Exception as e:
+        print('Failed to upload animated avatar:', e)
+
+        
 
 @bot.event
 async def on_ready():
@@ -37,6 +51,7 @@ async def on_ready():
 
 
 bot.add_help_command()
+
 
 
 if __name__ == "__main__":

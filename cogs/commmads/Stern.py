@@ -265,7 +265,7 @@ class stern(ezcord.Cog, emoji="⭐"):
 
     # event commmad
 
-    @stern.command(description="Löse ein zufälliges Event aus. uiii")
+    #@stern.command(description="Löse ein zufälliges Event aus. uiii")
     @discord.guild_only()
     @commands.cooldown(1, 3600, commands.BucketType.user)
     async def event(self, ctx):
@@ -443,6 +443,19 @@ class stern(ezcord.Cog, emoji="⭐"):
         embed_balance.set_thumbnail(url=member.display_avatar.url)
         await ctx.defer()
         await ctx.respond(embed=embed_balance)
+
+
+
+
+
+
+
+    
+
+
+
+
+
 
 
 def setup(bot):
