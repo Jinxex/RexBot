@@ -7,6 +7,8 @@ class Botavatar(commands.Cog):
         self.bot = bot
 
     @slash_command(description="Change bot's avatar")
+    @discord.guild_only()
+    @commands.cooldown(1, 86400, commands.BucketType.user)
     async def botavatar(
         self, ctx, img: discord.Attachment
     ):

@@ -1,5 +1,4 @@
 import datetime
-import sqlite3
 import discord
 import ezcord
 import random
