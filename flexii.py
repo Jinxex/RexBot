@@ -70,7 +70,7 @@ bot.add_help_command()
 
 if __name__ == "__main__":
     bot.load_cogs("./cogs/admin", subdirectories=True, custom_log_level="admin")
-    bot.load_cogs("./cogs/commmads", subdirectories=True, custom_log_level="commmads")
+    bot.load_cogs("./cogs/commands", subdirectories=True, custom_log_level="commmads")
     bot.load_cogs("./cogs/user", subdirectories=True, custom_log_level="user")
     bot.load_cogs("./cogs/events", subdirectories=True, custom_log_level="events")
     bot.load_cogs("./cogs/giveway", subdirectories=True, custom_log_level="giveway")
