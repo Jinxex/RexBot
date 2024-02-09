@@ -170,7 +170,7 @@ class stern(ezcord.Cog, emoji="⭐"):
 )
     @commands.cooldown(1, 7200, commands.BucketType.user)
     @discord.guild_only()
-    async def steal(self, ctx, member: Option(discord.Member)):
+    async def steal(self, ctx, member: Option(discord.Member)): # type: ignore
         required_stern = 20
         user_stern = await db.get_stern(ctx.author.id)
         if user_stern < required_stern:
@@ -218,7 +218,7 @@ class stern(ezcord.Cog, emoji="⭐"):
 
     @stern.command(description="du kannst dich freunde machen")
     @discord.guild_only()
-    async def give(self, ctx, member: Option(discord.Member), amount: int, description):
+    async def give(self, ctx, member: Option(discord.Member), amount: int, description): # type: ignore
         if member.id == ctx.author.id or member.id == ctx.bot.user.id:
             embed = discord.Embed(
                 title="warum?",
@@ -418,7 +418,7 @@ class stern(ezcord.Cog, emoji="⭐"):
         await ctx.respond(embed=embed)
 
     @stern.command()
-    async def balance(self, ctx, member: Option(discord.Member) = None):
+    async def balance(self, ctx, member: Option(discord.Member) = None): # type: ignore
         member = member or ctx.author
         user_id = member.id
 

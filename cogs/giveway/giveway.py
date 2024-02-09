@@ -31,11 +31,6 @@ class Giveaway(commands.Cog):
         await ctx.send_modal(modal)
 
 
-
-
-
-
-
 def setup(bot):
     bot.add_cog(Giveaway(bot))
 

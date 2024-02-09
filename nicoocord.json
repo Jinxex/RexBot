@@ -1,0 +1,8 @@
+{
+    "token": "MTE3MDQ0OTQyMTc5NjkwMDkyNQ.GtPPNa.9w_L_QMCBJ_gxyU6i-t0czBTpRhKTl9ivglyM8",
+    "debug": true,
+    "log_file": false,
+    "sync_commands": true,
+    "ready_print": true,
+    "database": "main.db"
+}

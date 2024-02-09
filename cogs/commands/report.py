@@ -15,7 +15,7 @@ class Report(ezcord.Cog):
     )
     @discord.guild_only()
     @commands.cooldown(1, 86400, commands.BucketType.user)
-    async def bug(self, ctx, reason: Option(str, description="Describe your problem in more detail and where the error lies")):
+    async def bug(self, ctx, reason: Option(str, description="Describe your problem in more detail and where the error lies")): # type: ignore
         owner_user = await self.bot.fetch_user(self.owner_id)
 
         embed = discord.Embed(
