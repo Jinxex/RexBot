@@ -51,11 +51,10 @@ async def on_ready():
 
 
 
-
 if __name__ == "__main__":
     bot.load_cogs("./cogs/admin")
     bot.load_cogs("./cogs/commands")
-    bot.load_cogs("./cogs/user")
+    bot.load_cogs("./cogs/bot")
     bot.load_cogs("./cogs/events")
     bot.load_cogs("./cogs/giveway")
     bot.load_cogs("./cogs/language")
@@ -64,3 +63,4 @@ if __name__ == "__main__":
     load_dotenv()
     
     bot.run()
+

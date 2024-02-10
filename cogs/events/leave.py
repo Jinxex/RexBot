@@ -1,10 +1,10 @@
 import datetime
+import asyncio
 import discord
 import ezcord
 import random
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
-
 
 class leaveDB(ezcord.DBHandler):
     def __init__(self):
@@ -20,7 +20,6 @@ class leaveDB(ezcord.DBHandler):
         enabled TEXT DEFAULT Off
         )
         """)
-
 
     async def enable(self, server_id, channel_id, enabled):
         async with self.start() as cursor:
@@ -46,7 +45,6 @@ class leaveDB(ezcord.DBHandler):
 
 db = leaveDB()
 
-
 class leaveSystem(ezcord.Cog):
     leave = SlashCommandGroup("leave")
 
@@ -55,7 +53,8 @@ class leaveSystem(ezcord.Cog):
         server_id = member.guild.id
         try:
             status = await db.check_enabled(server_id)
-        except:
+        except Exception as e:
+            print(f"Error: {e}")
             return
 
         if status == "On":
@@ -65,11 +64,10 @@ class leaveSystem(ezcord.Cog):
                 leave_phrases = [
                     f"{member.mention} gehört nun nicht mehr zur Crew!",
                     f"{member.mention} lieder hast du uns verlassen",
-                    f"wir wünschen dir{member.mention} noch viel Glück **{member.guild.name}** auf deinen Reise!"
+                    f"wir wünschen dir {member.mention} noch viel Glück **{member.guild.name}** auf deinen Reise!"
                 ]
                 leave_phrase = random.choice(leave_phrases)
                 timestamp = f"🗓️ Am {datetime.datetime.now().strftime('%d.%m.%Y')} um {datetime.datetime.now().strftime('%H:%M')}"
-
 
                 embed = discord.Embed(
                     title=f"👋 leave {member.display_name}!",
@@ -78,79 +76,80 @@ class leaveSystem(ezcord.Cog):
                 )
                 embed.set_footer(text=timestamp)
                 try:
-                    embed.set_thumbnail(url=member.display_avatar)
+                    embed.set_thumbnail(url=member.avatar.url)
                 except:
                     pass
 
                 await channel.send(embed=embed, content=member.mention)
-            except:
+            except Exception as e:
+                print(f"Error: {e}")
                 return
         elif status == "Off":
             return
-
-
 
     @leave.command(description="👋・Aktiviere das leaves-System")
     @discord.default_permissions(administrator=True)
     @discord.guild_only()
     async def setup(self, ctx):
-        status = await db.fix(ctx.guild.id)
-        if status == None:
-            status = "Off"
-        if status == "Off":
-            embed = discord.Embed(
-                color=discord.Color.blue(),
-                title="👋 leaves-System",
-                description="Wähle bitte im **Channel-Select** den Kanal aus, in welchen leavesnachrichten gesendet werden sollen"
-            )
-            try:
-                embed.set_thumbnail(url=ctx.guild.icon)
-            except:
-                pass
+        try:
+            status = await db.fix(ctx.guild.id)
+            if status is None:
+                status = "Off"
+            if status == "Off":
+                embed = discord.Embed(
+                    color=discord.Color.blue(),
+                    title="👋 leaves-System",
+                    description="Wähle bitte im **Channel-Select** den Kanal aus, in welchen leavesnachrichten gesendet werden sollen"
+                )
+                try:
+                    embed.set_thumbnail(url=ctx.guild.icon.url)
+                except:
+                    pass
 
-            await ctx.respond(embed=embed, view=leaChannelSelect(ctx, self.bot))
-        else:
-            await ctx.respond(
-                f"> **Bitte schalte das System erst mit {self.bot.get_cmd('leave stop')} aus, und nutze dann diesen Command erneut!**",
-                ephemeral=True)
+                await ctx.respond(embed=embed, view=leaChannelSelect(ctx, self.bot))
+            else:
+                await ctx.respond(
+                    f"> **Bitte schalte das System erst mit {self.bot.get_cmd('leave stop')} aus, und nutze dann diesen Command erneut!**",
+                    ephemeral=True)
+        except Exception as e:
+            print(f"Error: {e}")
 
     @leave.command(description="👋・Deaktiviere das leaves-System")
     @discord.default_permissions(administrator=True)
     @discord.guild_only()
     async def stop(self, ctx: discord.ApplicationContext):
-        await ctx.defer()
-        check_enabled = await db.check_enabled(ctx.guild.id)
-        if check_enabled == "On": 
-            await db.disable(ctx.guild.id, "Off")
-            embed = discord.Embed(
-                title="👋 leaves-System",
-                description=f"**Das leaves-System ist nun ausgeschaltet!**\n\n"
-                            f"Aktiviere es wieder mit {self.bot.get_cmd('leave setup')} ",
-                color=discord.Color.brand_green()
-            )
-            try:
-                embed.set_thumbnail(url=ctx.guild.icon)
-            except:
-                pass
-        else:  
-            embed = discord.Embed(
-                title="👋 leaves-System",
-                description=f"**Das leaves-System ist bereits ausgeschaltet!**\n\n"
-                            f"Aktiviere es mit {self.bot.get_cmd('leave setup')}",
-                color=discord.Color.brand_red()
-            )
-            try:
-                embed.set_thumbnail(url=ctx.user.display_avatar)
-            except:
-                pass
-        await ctx.respond(embed=embed)
-
-
-
+        try:
+            await ctx.defer()
+            check_enabled = await db.check_enabled(ctx.guild.id)
+            if check_enabled == "On": 
+                await db.disable(ctx.guild.id, "Off")
+                embed = discord.Embed(
+                    title="👋 leaves-System",
+                    description=f"**Das leaves-System ist nun ausgeschaltet!**\n\n"
+                                f"Aktiviere es wieder mit {self.bot.get_cmd('leave setup')} ",
+                    color=discord.Color.brand_green()
+                )
+                try:
+                    embed.set_thumbnail(url=ctx.guild.icon.url)
+                except:
+                    pass
+            else:  
+                embed = discord.Embed(
+                    title="👋 leaves-System",
+                    description=f"**Das leaves-System ist bereits ausgeschaltet!**\n\n"
+                                f"Aktiviere es mit {self.bot.get_cmd('leave setup')}",
+                    color=discord.Color.brand_red()
+                )
+                try:
+                    embed.set_thumbnail(url=ctx.user.display_avatar.url)
+                except:
+                    pass
+            await ctx.respond(embed=embed)
+        except Exception as e:
+            print(f"Error: {e}")
 
 def setup(bot: discord.Bot):
     bot.add_cog(leaveSystem(bot))
-
 
 class leaChannelSelect(discord.ui.View):
     def __init__(self, ctx, bot):
@@ -175,6 +174,5 @@ class leaChannelSelect(discord.ui.View):
             )
             await interaction.message.edit(embed=embed, view=None)
             await db.enable(server_id=interaction.guild.id, channel_id=select.values[0].id, enabled="On")
-
         else:
             await interaction.response.send_message("> **Du bist nicht berechtigt, diese View zu nutzen!**", ephemeral=True)

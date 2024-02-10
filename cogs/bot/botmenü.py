@@ -10,7 +10,6 @@ options = [
     discord.SelectOption(label="Invite Bot", emoji="📎", value="invite"),
     discord.SelectOption(label="Server Count", emoji="🌐", value="server"),
     discord.SelectOption(label="Bot Feedback", emoji="⭐", value="Feedback"),
-    discord.SelectOption(label="Help", emoji="🤖", value="help"),
 ]
 
 class BotMenu(ezcord.Cog, emoji="🤖"):
@@ -96,13 +95,6 @@ class BotMenuSelectView(discord.ui.View):
                 color=discord.Color.gold()
             )
             await interaction.response.send_message(embed=feedback_embed, view=BotView())
-        elif selected_option == "help":
-            help_embed = discord.Embed(
-                title="🤖 • Help Menu",
-                description="Hey there! If you type /help, you'll see a list of my commands.",
-                color=discord.Color.yellow()
-            )
-            await interaction.response.send_message(embed=help_embed)
 
 
 class BotView(discord.ui.View):

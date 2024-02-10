@@ -39,7 +39,7 @@ class Language(ezcord.Cog):
     async def set(
         self,
         ctx,
-        language: Option(str, description="Choose the language", choices=["Deutsch", "English"])
+        language: Option(str, description="Choose the language", choices=["Deutsch", "English"]) # type: ignore
     ):
         server_id = ctx.guild.id
         await db.set_server_language(server_id, language)
