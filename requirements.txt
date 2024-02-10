@@ -3,3 +3,4 @@ python-dotenv
 ezcord
 chat_exporter
 pygount
+nicoocord
