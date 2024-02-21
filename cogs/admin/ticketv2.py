@@ -5,13 +5,35 @@ import ezcord
 from datetime import datetime
 import asyncio
 
+
+
+
+class ticketDB(ezcord.DBHandler):
+    def __init__(self):
+        super().__init__("db/ticketv2.db")
+
+
+    async def setup(self):
+        await self.execute(
+            """CREATE TABLE IF NOT EXISTS users(
+            guild_id INTEGER PRIMARY KEY,
+            staffrole_id INTEGER DEFAULT 0,
+            category_id INTEGER DEFAULT 0,
+            transcriptchannel INTEGER DEFAULT 0,
+            channel_id INTEGER DEFAULT 0
+            )"""
+        )
+
+
+db = ticketDB()
+#__________________________________________________________________________________________________#
 CATEGORY = "⚡ticket"
 
 
 options = [
         discord.SelectOption(label="suppert", description="suppert Beschreibung", emoji="🎫"),
-        discord.SelectOption(label="", description="Java Beschreibung", emoji="💻"),
-        discord.SelectOption(label="Javascript", description="Javascript Beschreibung", emoji="🚩", value="JS")
+        discord.SelectOption(label="bug", description="bug Beschreibung", emoji="💻"),
+        discord.SelectOption(label="test", description="test Beschreibung", emoji="🗝️")
     ]
 
 
@@ -42,6 +64,11 @@ class Ticketv2(ezcord.Cog, emoji="🎫"):
 def setup(bot):
     bot.add_cog(Ticketv2(bot))
 
+
+#________________________________________________________________________________________________________________#
+
+
+
 class CreateTicket(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -67,17 +94,20 @@ class CreateTicket(discord.ui.View):
         if category:
             channel = await category.create_text_channel(name=f"{interaction.user.display_name}", overwrites=overwrites, topic=interaction.user.name)
             embed = discord.Embed(
-                title="Ticket Created",
-                description="Support will be with you shortly.",
+                title="🎫 📩 Ticket Created",
+                description="🆘 Support will 🐝 with you 🕑 shortly.",
                 color=discord.Color.green()
             )
             await channel.send(embed=embed, view=CloseTicket())
-            await interaction.response.send_message(f"I've opened a ticket for you at {channel.mention}", ephemeral=True)
+            await interaction.response.send_message(f"I've 🆕 a ticket for you 📌 at {channel.mention}", ephemeral=True)
         else:
-            await interaction.response.send_message("I couldn't find the specified category.", ephemeral=True)
+            await interaction.response.send_message("I 🚫 find the specified category.", ephemeral=True)
 
 
-#________________________________________________________________________________________________________________#
+#__________________________________________________________________________________________________________________________#
+
+
+
 
 class CloseTicket(discord.ui.View):
     def __init__(self):
