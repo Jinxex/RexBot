@@ -16,9 +16,10 @@ import random
 intents = discord.Intents.all()
 
 
-bot = ezcord.bot(
+bot = ezcord.Bot(
     intents=intents,
     debug_guilds=[1202245624553279578],
+    error_handler=(os.getenv("ERROR_WEBHOOK_URL")),
 )
 
 

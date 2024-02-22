@@ -1,35 +1,49 @@
 import discord
 from discord.ext import commands
-from discord.commands import slash_command
+from discord.commands import slash_command,Option
 import ezcord
 from datetime import datetime
 import asyncio
 
-CATEGORY = "⚡ Support"
 
 
-options = [
-        discord.SelectOption(label="suppert", description="suppert Beschreibung", emoji="🎫"),
-        discord.SelectOption(label="", description="Java Beschreibung", emoji="💻"),
-        discord.SelectOption(label="Javascript", description="Javascript Beschreibung", emoji="🚩", value="JS")
-    ]
+class ticketDB(ezcord.DBHandler):
+    def __init__(self):
+        super().__init__("db/ticket.db")
 
+    async def setup(self):
+        await self.execute(
+            """CREATE TABLE IF NOT EXISTS ticket(
+            server_id INTEGER PRIMARY KEY,
+            category_id INTEGER DEFAULT 0
+            )"""
+        )
+
+    async def set_category(self, server_id, category_id):
+        await self.execute(
+            "INSERT INTO ticket (server_id, category_id) VALUES (?, ?) ON CONFLICT(server_id) DO UPDATE SET category_id = ?",
+            (server_id, category_id, category_id)
+        )
+
+    async def get_category(self, server_id):
+        return await self.one("SELECT category_id FROM ticket WHERE server_id = ?", (server_id,))
+
+db = ticketDB()
 
 class Ticketv2(ezcord.Cog, emoji="🎫"):
-
-
+    def __init__(self, bot):
+        self.bot = bot
 
     @ezcord.Cog.listener()
     async def on_ready(self):
         self.bot.add_view(CreateTicket())
         self.bot.add_view(CloseTicket())
 
-
-
-
-
     @slash_command(description="Create a ticket")
-    async def ticketv2(self, ctx):
+    async def ticketv2(self, ctx, category: discord.CategoryChannel):
+        server_id = ctx.guild.id
+        category_id = category.id
+        await db.set_category(server_id, category_id)
         embed = discord.Embed(
             title="Create a ticket",
             description="**If you need support, click `📩 Create ticket` button below and create a ticket!**",
@@ -46,35 +60,30 @@ class CreateTicket(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-
-
-    @discord.ui.select(
-        min_values=1,
-        max_values=2,
-        placeholder="Triff eine Auswahl",
-        options=options,
-    )
-
-
     @discord.ui.button(label="Create ticket", style=discord.ButtonStyle.blurple, emoji="📩", custom_id="Create_ticket")
     async def create_ticket(self, button, interaction):
-        overwrites = {
-            interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            interaction.user: discord.PermissionOverwrite(view_channel=True, read_message_history=True, send_messages=True),
-            interaction.guild.me: discord.PermissionOverwrite(view_channel=True, read_message_history=True, send_messages=True),
-        }
-        category = discord.utils.get(interaction.guild.categories, name=CATEGORY)
-        if category:
-            channel = await category.create_text_channel(name=f"{interaction.user.display_name}", overwrites=overwrites, topic=interaction.user.name)
-            embed = discord.Embed(
-                title="Ticket Created",
-                description="Support will be with you shortly.",
-                color=discord.Color.green()
-            )
-            await channel.send(embed=embed, view=CloseTicket())
-            await interaction.response.send_message(f"I've opened a ticket for you at {channel.mention}", ephemeral=True)
-        else:
-            await interaction.response.send_message("I couldn't find the specified category.", ephemeral=True)
+        category_id = await db.get_category(interaction.guild.id)
+ 
+        if category_id:
+            category = discord.utils.get(interaction.guild.categories, id=category_id)
+
+            if category:
+                overwrites = {
+                    interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
+                    interaction.user: discord.PermissionOverwrite(view_channel=True, read_message_history=True, send_messages=True),
+                    interaction.guild.me: discord.PermissionOverwrite(view_channel=True, read_message_history=True, send_messages=True),
+                }
+                channel = await category.create_text_channel(name=f"{interaction.user.display_name}", overwrites=overwrites, topic=interaction.user.name)
+                embed = discord.Embed(
+                    title="Ticket Created",
+                    description="Support will be with you shortly.",
+                    color=discord.Color.green()
+                )
+                await channel.send(embed=embed, view=CloseTicket())
+                await interaction.response.send_message(f"I've opened a ticket for you at {channel.mention}", ephemeral=True)
+                return
+
+        await interaction.response.send_message("The category ID is not set in the database or the specified category doesn't exist.", ephemeral=True)
 
 
 #________________________________________________________________________________________________________________#
@@ -104,7 +113,7 @@ class CloseTicket(discord.ui.View):
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @discord.ui.button(label="user", style=discord.ButtonStyle.gray, emoji="👥", row=1, custom_id="user" )
+    @discord.ui.button(label="Add User", style=discord.ButtonStyle.gray, emoji="👥", row=1, custom_id="user" )
     async def user_ticket(self, button, interaction):
         await interaction.response.send_modal(UserModal())
 
@@ -114,7 +123,7 @@ class CloseTicket(discord.ui.View):
         await interaction.response.send_modal(RoleModal())
 
 
-    @discord.ui.button(label="remove a user", style= discord.ButtonStyle.gray, emoji="🌀", row=3, custom_id="remove_user")
+    @discord.ui.button(label="Remove User", style= discord.ButtonStyle.gray, emoji="🌀", row=3, custom_id="remove_user")
     async def romove_user(self, button, interaction):
         await interaction.response.send_modal(removeuser())
 
