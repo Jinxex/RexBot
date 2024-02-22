@@ -5,7 +5,7 @@ import ezcord
 from datetime import datetime
 import asyncio
 
-CATEGORY = "⚡ticket"
+CATEGORY = "⚡ Support"
 
 
 options = [

@@ -7,7 +7,8 @@ import re
 import colorama
 from discord.commands import Option
 from colorama import Fore
-import nicoocord as nc
+import ezcord
+
 from discord import Color
 import random
 
@@ -15,35 +16,10 @@ import random
 intents = discord.Intents.all()
 
 
-bot = nc.Bot(
+bot = ezcord.bot(
     intents=intents,
     debug_guilds=[1202245624553279578],
 )
-
-
-
-@bot.event
-async def on_ready():
-    print('Logged in as {0.user}'.format(bot))
-    try:
-        with open('avatar.gif', 'rb') as avatar:
-            await bot.user.edit(avatar=avatar.read())
-        print('Animated avatar uploaded successfully!')
-    except Exception as e:
-        print('Failed to upload animated avatar:', e)
-
-        
-
-@bot.event
-async def on_ready():
-    await bot.change_presence(
-        activity=discord.Activity(
-            type=discord.ActivityType.streaming,
-            name="Flexii",
-            url="https://twitch.tv/littxle_"
-        ),
-        status=discord.Status.idle,
-    )
 
 
 
