@@ -25,9 +25,6 @@ bot = ezcord.Bot(
 
 
 
-
-
-
 if __name__ == "__main__":
     bot.load_cogs("./cogs/admin")
     bot.load_cogs("./cogs/commands")
