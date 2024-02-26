@@ -57,6 +57,7 @@ class Ticketv2(ezcord.Cog, emoji="🎫"):
     ticket = SlashCommandGroup("ticket", description="Create your own ticket")
 
     @ticket.command(description="Create a ticket")
+    @discord.guild_only()
     @discord.default_permissions(administrator=True)
     async def setup(self, ctx, category: discord.CategoryChannel, role: discord.Role):
         server_id = ctx.guild.id
