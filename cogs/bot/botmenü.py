@@ -139,7 +139,7 @@ class StarModal(discord.ui.Modal):
         self.stars = stars
 
     async def callback(self, interaction):
-        channel_id = 1204138508256546866  #deine id
+        channel_id = 1209968291452289104  #deine id
 
         channel = interaction.guild.get_channel(channel_id)
         if channel:

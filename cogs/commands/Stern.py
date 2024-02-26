@@ -216,7 +216,7 @@ class stern(ezcord.Cog, emoji="⭐"):
 
     # /give commmad
 
-    @stern.command(description="du kannst dich freunde machen")
+    @stern.command(description="Du kannst Freunde finden")
     @discord.guild_only()
     async def give(self, ctx, member: Option(discord.Member), amount: int, description): # type: ignore
         if member.id == ctx.author.id or member.id == ctx.bot.user.id:
