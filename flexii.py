@@ -18,7 +18,6 @@ intents = discord.Intents.all()
 
 bot = ezcord.Bot(
     intents=intents,
-    debug_guilds=[1202245624553279578],
     error_handler=(os.getenv("ERROR_WEBHOOK_URL")),
 )
 
@@ -31,7 +30,6 @@ if __name__ == "__main__":
     bot.load_cogs("./cogs/bot")
     bot.load_cogs("./cogs/events")
     bot.load_cogs("./cogs/giveway")
-    bot.load_cogs("./cogs/language")
 
 
     load_dotenv()

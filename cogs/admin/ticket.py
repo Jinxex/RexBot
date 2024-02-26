@@ -13,10 +13,8 @@ class ticketDB(ezcord.DBHandler):
         await self.execute(
             """CREATE TABLE IF NOT EXISTS ticket(
             server_id INTEGER PRIMARY KEY,
-            user_id INTEGER,
             category_id INTEGER DEFAULT 0,
-            teamrole_id INTEGER DEFAULT 0,
-            FOREIGN KEY (user_id) REFERENCES user(id)
+            teamrole_id INTEGER DEFAULT 0
             )"""
         )
 
@@ -37,21 +35,9 @@ class ticketDB(ezcord.DBHandler):
 
     async def get_teamrole(self, server_id):
         return await self.one("SELECT teamrole_id FROM ticket WHERE server_id = ?", (server_id,))
-    
-    async def add_user(self, user_id, server_id):
-        await self.execute(
-            "INSERT OR IGNORE INTO ticket (user_id, server_id) VALUES(?, ?)", (user_id, server_id)
-        )
 
 
-    async def get_userid(self, server_id):
-        return await self.one("SELECT user_id FROM ticket WHERE server_id = ?", (server_id,))
 
-    async def delete_user(self, server_id):
-        await self.execute("UPDATE ticket SET user_id = 0 WHERE server_id = ?", (server_id,))
-
-    async def get_ticket_users(self):
-        return await self.all("SELECT server_id, user_id FROM ticket WHERE user_id != 0")
 
 db = ticketDB()
 
@@ -66,7 +52,7 @@ class Ticketv2(ezcord.Cog, emoji="🎫"):
     async def on_ready(self):
         self.bot.add_view(CreateTicket())
         self.bot.add_view(Ticket())
-        self.bot.add_view(frageticket())
+        #self.bot.add_view(frageticket())
 
     ticket = SlashCommandGroup("ticket", description="Create your own ticket")
 
@@ -96,9 +82,7 @@ class CreateTicket(discord.ui.View):
 
     @discord.ui.button(label="Create Ticket", style=discord.ButtonStyle.primary, emoji="📨", custom_id="create_ticket")
     async def button_callback1(self, button, interaction):
-        user_id = interaction.user.id
         server_id = interaction.guild.id
-        await db.add_user(user_id, server_id)
 
         embed = discord.Embed(
             title="Create Ticket",
@@ -123,7 +107,7 @@ class CreateTicketSelect(discord.ui.View):
     async def ticket_select_callback(self, select, interaction):
         category_id = await db.get_category(interaction.guild.id)
         teamrole_id = await db.get_teamrole(interaction.guild.id)
-        user_id = await db.get_userid(interaction.guild.id)  
+
         
         if category_id:
             category = discord.utils.get(interaction.guild.categories, id=category_id)
@@ -168,29 +152,40 @@ class Ticket(discord.ui.View):
 
     @discord.ui.button(label="Ticket accepted", style=discord.ButtonStyle.green, emoji="🗂️", row=1, custom_id="accepted_button")
     async def assume_ticket(self, button, interaction):
+        team_role_id = await db.get_teamrole(interaction.guild.id)
+        if team_role_id is None:  
+            await interaction.response.send_message("Die Teamrolle wurde nicht konfiguriert. Bitte kontaktiere den Administrator.", ephemeral=True)
+            return
+
+        team_role = interaction.guild.get_role(team_role_id)
+        if team_role is None:
+            await interaction.response.send_message("Die konfigurierte Teamrolle wurde nicht gefunden. Bitte kontaktiere den Administrator.", ephemeral=True)
+            return
+
+        if team_role not in interaction.user.roles:
+            await interaction.response.send_message("Du bist nicht autorisiert, dieses Ticket anzunehmen.", ephemeral=True)
+            return
+
         if self.button_pressed:
-            await interaction.response.send_message("You have already accepted the ticket.", ephemeral=True)
+            await interaction.response.send_message("Du hast das Ticket bereits angenommen.", ephemeral=True)
             return
 
         await interaction.response.defer()
         member = interaction.user
         embed = discord.Embed(
-            title="Ticket accepted",
-            description=f"{member.mention} will now take care of your request!",
+            title="Ticket angenommen",
+            description=f"{member.mention} wird sich nun um deine Anfrage kümmern!",
             color=discord.Color.blue()
         )
         await interaction.followup.send(embed=embed)
         self.button_pressed = True
+
 
     @discord.ui.button(label="Close", style=discord.ButtonStyle.blurple, emoji="🔐", row=1, custom_id="close_ticket")
     async def close_ticket(self, button, interaction):
         team_role_id = await db.get_teamrole(interaction.guild.id)
         if team_role_id in [role.id for role in interaction.user.roles]:
             server_id = interaction.guild.id
-            user_id = await db.get_userid(server_id)
-            
-            if user_id:
-                await db.delete_user(server_id)
 
             embed = discord.Embed(
                 title="Close Ticket",
@@ -235,81 +230,57 @@ class Ticket(discord.ui.View):
             elif "Remove User" in selected_options:
                 await interaction.response.send_modal(removeuser())
             elif "Do you still have questions?" in selected_options:
-                ticket_opener = channel.topic
-                msg = await channel.send(f"{interaction.user.mention} has opened a ticket.")
                 embed = discord.Embed(
-                    title="Additional Questions",
-                    description=f"Hey {ticket_opener}, if you have no further questions or don't click anything, the ticket will automatically close in 12 hours.",
-                    color=discord.Color.gold()
+                    title="It's coming soon",
+                    description="This doesn't work yet due to bugs, it's coming soon",
+                    color=discord.Color.red()
                 )
-                embed.set_author(name=interaction.user.name, icon_url=interaction.user.avatar.url)
-                await interaction.response.send_message(content=msg.content, embed=embed, view=frageticket())
-        else:
-            error_embed = discord.Embed(
-                title="Access Denied",
-                description="You do not have the required role to perform this action.",
-                color=discord.Color.red()
-            )
-            await interaction.response.send_message(embed=error_embed, ephemeral=True)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                #ticket_opener = channel.topic
+                #msg = await channel.send(f"{interaction.user.mention} has opened a ticket.")
+                #embed = discord.Embed(
+                    #title="Additional Questions",
+                    #description=f"Hey {ticket_opener}, if you have no further questions or don't click anything, the ticket will automatically close in 12 hours.",
+                    #color=discord.Color.gold()
+                #)
+                #embed.set_author(name=interaction.user.name, icon_url=interaction.user.avatar.url)
+                #await interaction.response.send_message(content=msg.content, embed=embed, view=frageticket())
+        #else:
+            #error_embed = discord.Embed(
+                #title="Access Denied",
+                #description="You do not have the required role to perform this action.",
+                #color=discord.Color.red()
+            #)
+            #await interaction.response.send_message(embed=error_embed, ephemeral=True)
 
 
-class frageticket(discord.ui.View):
-    def __init__(self, user_in_db=False):
-        super().__init__(timeout=None)
-        self.user_in_db = user_in_db
+#class frageticket(discord.ui.View):
+    #def __init__(self, user_in_db=False):
+        #super().__init__(timeout=None)
+        #self.user_in_db = user_in_db
 
-    async def check_user_in_db(self, interaction):
-        server_id = interaction.guild.id
-        user_id = interaction.user.id
-        db_user_id = await db.get_userid(server_id)
-        if user_id == db_user_id:
-            self.user_in_db = True
-        else:
-            embed = discord.Embed(
-                title="Unauthorized Action",
-                description="You are not authorized to interact with these buttons. Only the ticket owner can use them.",
-                color=discord.Color.red()
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+    #async def check_user_in_db(self, interaction):
+        #server_id = interaction.guild.id
 
-    @discord.ui.button(label="Yes, I still have questions", style=discord.ButtonStyle.primary, row=1, emoji="🎟️", custom_id="frage_ticket")
-    async def ask_back(self, button, interaction):
-        await self.check_user_in_db(interaction)
-        if self.user_in_db:
-            ticket_opener = interaction.channel.topic
-            embed = discord.Embed(
-                title="Ask questions",
-                description=f"All clear {ticket_opener}, you can now ask your questions.",
-                color=discord.Color.green()
-            )
-            await interaction.response.send_message(embed=embed)
-        else:
-            embed = discord.Embed(
-                title="Unauthorized Action",
-                description="Are you sure you want to close the ticket?\n\n**Warning**: You are not the ticket owner.",
-                color=discord.Color.red()
-            )
-            await interaction.response.send_message(embed=embed)
 
-    @discord.ui.button(label="No, all done", style=discord.ButtonStyle.green, row=1, emoji="✅", custom_id="no_ticket")
-    async def no_back(self, button, interaction):
-        server_id = interaction.guild.id
-        user_id = interaction.user.id
-        db_user_id = await db.get_userid(server_id)
-        if user_id == db_user_id:
-            for user in interaction.channel.members:
-                if user != interaction.guild.owner:
-                    await interaction.channel.set_permissions(user, overwrite=None)
-            await db.delete_user(server_id)  # Benutzerdaten aus der Datenbank löschen
-            await asyncio.sleep(1)
-            await interaction.channel.delete()
-        else:
-            embed = discord.Embed(
-                title="Unauthorized Action",
-                description="You are not authorized to interact with these buttons. Only the ticket owner can use them.",
-                color=discord.Color.red()
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+    #@discord.ui.button(label="Yes, I still have questions", style=discord.ButtonStyle.primary, row=1, emoji="🎟️", custom_id="frage_ticket")
+    #async def ask_back(self, button, interaction):
+
+
+            #ticket_opener = interaction.channel.topic
+            #embed = discord.Embed(
+                #title="Ask questions",
+                #description=f"All clear {ticket_opener}, you can now ask your questions.",
+                #color=discord.Color.green()
+           # )
+            #await interaction.response.send_message(embed=embed)
+
+    #@discord.ui.button(label="No, all done", style=discord.ButtonStyle.green, row=1, emoji="✅", custom_id="no_ticket")
+    #async def no_back(self, button, interaction):
+       # server_id = interaction.guild.id
+        #await asyncio.sleep(1)
+       # await interaction.channel.delete()
+
 
 
 
