@@ -174,6 +174,9 @@ class Ticket(discord.ui.View):
             return
 
         await interaction.response.defer()
+        team_role_id = await db.get_teamrole(interaction.guild.id)
+        if team_role_id in [role.id for role in interaction.user.roles]:
+            server_id = interaction.guild.id
         member = interaction.user
         embed = discord.Embed(
             title="Ticket angenommen",
