@@ -104,60 +104,64 @@ class WelcomeSystem(ezcord.Cog):
 
 
     @welcome.command(description="👋・Aktiviere das Willkommens-System")
-    @discord.default_permissions(administrator=True)
     @discord.guild_only()
     async def setup(self, ctx, role: discord.Role):
-        status = await db.fix(ctx.guild.id)
-        if status == None:
-            status = "Off"
-        if status == "Off":
-            embed = discord.Embed(
-                color=discord.Color.blue(),
-                title="👋 Willkommens-System",
-                description="Wähle bitte im **Channel-Select** den Kanal aus, in welchen Willkommensnachrichten gesendet werden sollen"
-            )
-            try:
-                embed.set_thumbnail(url=ctx.guild.icon)
-            except:
-                pass
-            await db.add_welcome_role(ctx.guild.id, role.id)
+        if ctx.author.guild_permissions.administrator:
+            status = await db.fix(ctx.guild.id)
+            if status == None:
+                status = "Off"
+            if status == "Off":
+                embed = discord.Embed(
+                    color=discord.Color.blue(),
+                    title="👋 Willkommens-System",
+                    description="Wähle bitte im **Channel-Select** den Kanal aus, in welchen Willkommensnachrichten gesendet werden sollen"
+                )
+                try:
+                    embed.set_thumbnail(url=ctx.guild.icon)
+                except:
+                    pass
+                await db.add_welcome_role(ctx.guild.id, role.id)
 
-            await ctx.respond(embed=embed, view=WlcChannelSelect(ctx, self.bot))
+                await ctx.respond(embed=embed, view=WlcChannelSelect(ctx, self.bot))
+            else:
+                await ctx.respond(
+                    f"> **Bitte schalte das System erst mit {self.bot.get_cmd('welcome stop')} aus, und nutze dann diesen Command erneut!**",
+                    ephemeral=True)
         else:
-            await ctx.respond(
-                f"> **Bitte schalte das System erst mit {self.bot.get_cmd('welcome stop')} aus, und nutze dann diesen Command erneut!**",
-                ephemeral=True)
+            await ctx.response.send_message("Error: Du hast keine Berechtigung, diesen Befehl auszuführen.", ephemeral=True)
 
     @welcome.command(description="👋・Deaktiviere das Willkommens-System")
-    @discord.default_permissions(administrator=True)
     @discord.guild_only()
     async def stop(self, ctx: discord.ApplicationContext):
-        await ctx.defer()
-        check_enabled = await db.check_enabled(ctx.guild.id)
-        if check_enabled == "On": 
-            await db.disable(ctx.guild.id, "Off")
-            embed = discord.Embed(
-                title="👋 Willkommens-System",
-                description=f"**Das Willkommens-System ist nun ausgeschaltet!**\n\n"
-                            f"Aktiviere es wieder mit {self.bot.get_cmd('welcome setup')} ",
-                color=discord.Color.brand_green()
-            )
-            try:
-                embed.set_thumbnail(url=ctx.guild.icon)
-            except:
-                pass
-        else:  
-            embed = discord.Embed(
-                title="👋 Willkommens-System",
-                description=f"**Das Willkommens-System ist bereits ausgeschaltet!**\n\n"
-                            f"Aktiviere es mit {self.bot.get_cmd('welcome setup')}",
-                color=discord.Color.brand_red()
-            )
-            try:
-                embed.set_thumbnail(url=ctx.user.display_avatar)
-            except:
-                pass
-        await ctx.respond(embed=embed)
+        if ctx.author.guild_permissions.administrator:
+            await ctx.defer()
+            check_enabled = await db.check_enabled(ctx.guild.id)
+            if check_enabled == "On": 
+                await db.disable(ctx.guild.id, "Off")
+                embed = discord.Embed(
+                    title="👋 Willkommens-System",
+                    description=f"**Das Willkommens-System ist nun ausgeschaltet!**\n\n"
+                                f"Aktiviere es wieder mit {self.bot.get_cmd('welcome setup')} ",
+                    color=discord.Color.brand_green()
+                )
+                try:
+                    embed.set_thumbnail(url=ctx.guild.icon)
+                except:
+                    pass
+            else:  
+                embed = discord.Embed(
+                    title="👋 Willkommens-System",
+                    description=f"**Das Willkommens-System ist bereits ausgeschaltet!**\n\n"
+                                f"Aktiviere es mit {self.bot.get_cmd('welcome setup')}",
+                    color=discord.Color.brand_red()
+                )
+                try:
+                    embed.set_thumbnail(url=ctx.user.display_avatar)
+                except:
+                    pass
+            await ctx.respond(embed=embed)
+        else:
+            await ctx.response.send_message("Error: Du hast keine Berechtigung, diesen Befehl auszuführen.", ephemeral=True)
 
 
 

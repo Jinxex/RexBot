@@ -27,8 +27,11 @@ class Giveaway(commands.Cog):
 
     @giveway.command(description="Start a giveaway")
     async def start(self, ctx: discord.ApplicationContext, time: str, description="Example 10s, 10m, 10h, 10d"):
-        modal = Modal(title="Create a giveaway", time=time)
-        await ctx.send_modal(modal)
+        if ctx.author.guild_permissions.administrator:
+            modal = Modal(title="Create a giveaway", time=time)
+            await ctx.send_modal(modal)
+        else:
+            await ctx.response.send_message("Error: Du hast keine Berechtigung, diesen Befehl auszuführen.", ephemeral=True)
 
 
 def setup(bot):

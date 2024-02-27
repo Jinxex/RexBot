@@ -65,7 +65,7 @@ class BotMenuSelectView(discord.ui.View):
         elif selected_option == "support":
             support_embed = discord.Embed(
                 title="🛠 • Support Confirmation",
-                description="Here is my Support Server! • 🛠 [Join Now](https://discord.gg/6qQpTWzczY)",
+                description="Here is my Support Server! • 🛠 [Join Now](https://discord.gg/dgYCukrw3n)",
                 color=discord.Color.red()
             )
             await interaction.response.send_message(embed=support_embed)

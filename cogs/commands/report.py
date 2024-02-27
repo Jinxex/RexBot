@@ -1,21 +1,18 @@
 import discord
 from discord.commands import slash_command, Option
-import ezcord
 from discord.ext import commands
-from ezcord import View
 
-class Report(ezcord.Cog):
+class Report(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.owner_id = 817435791079768105
 
-        
     @slash_command(
         description="Send a DM owner report about the bot!"
     )
     @discord.guild_only()
     @commands.cooldown(1, 86400, commands.BucketType.user)
-    async def bug(self, ctx, reason: Option(str, description="Describe your problem in more detail and where the error lies")): # type: ignore
+    async def bug(self, ctx, reason: str, img: Option(discord.Attachment, description="Attach an image (optional)")): # type: ignore
         owner_user = await self.bot.fetch_user(self.owner_id)
 
         embed = discord.Embed(
@@ -23,6 +20,10 @@ class Report(ezcord.Cog):
             description=reason,
             color=discord.Color.red()
         )
+
+        if img is not None:
+            embed.set_image(url=img.url)
+
         dm_channel = await owner_user.create_dm()
         await dm_channel.send(embed=embed)
 

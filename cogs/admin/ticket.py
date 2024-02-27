@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from discord.commands import SlashCommandGroup, Option
+from discord.commands import slash_command
+from discord.ext import commands
 import ezcord
 from datetime import datetime
 import asyncio
@@ -54,25 +55,26 @@ class Ticketv2(ezcord.Cog, emoji="🎫"):
         self.bot.add_view(Ticket())
         #self.bot.add_view(frageticket())
 
-    ticket = SlashCommandGroup("ticket", description="Create your own ticket")
 
-    @ticket.command(description="Create a ticket")
+    @slash_command(description="Create a ticket")
     @discord.guild_only()
-    @discord.default_permissions(administrator=True)
-    async def setup(self, ctx, category: discord.CategoryChannel, role: discord.Role):
-        server_id = ctx.guild.id
-        category_id = category.id
-        teamrole_id = role.id
-        await db.set_category(server_id, category_id)
-        await db.set_teamrole(server_id, teamrole_id)
-        embed = discord.Embed(
-            title="Create a ticket",
-            description="**If you need support, click `📨 Create ticket` button below and create a ticket!**",
-            color=discord.Color.dark_green()
-        )
-        embed.timestamp = datetime.utcnow()
-        await ctx.channel.send(embed=embed, view=CreateTicket())
-        await ctx.respond("It was sent successfully", ephemeral=True)
+    async def ticket(self, ctx, category: discord.CategoryChannel, role: discord.Role):
+        if ctx.author.guild_permissions.administrator:
+            server_id = ctx.guild.id
+            category_id = category.id
+            teamrole_id = role.id
+            await db.set_category(server_id, category_id)
+            await db.set_teamrole(server_id, teamrole_id)
+            embed = discord.Embed(
+                title="Create a ticket",
+                description="**If you need support, click `📨 Create ticket` button below and create a ticket!**",
+                color=discord.Color.dark_green()
+            )
+            embed.timestamp = datetime.utcnow()
+            await ctx.channel.send(embed=embed, view=CreateTicket())
+            await ctx.respond("It was sent successfully", ephemeral=True)
+        else:
+            await ctx.respond("Error: You don't have permissions to use this command.", ephemeral=True)
 
 def setup(bot):
     bot.add_cog(Ticketv2(bot))

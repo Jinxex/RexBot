@@ -9,10 +9,12 @@ class Embed(commands.Cog):
 
     @slash_command(description="Erstelle ein Embed")
     @discord.guild_only()
-    @discord.default_permissions(administrator=True)
     async def embed(self, ctx):
-        modal = Modal(bot=self.bot, title="Erstelle ein Embed")
-        await ctx.send_modal(modal)
+        if ctx.author.guild_permissions.administrator:
+            modal = Modal(bot=self.bot, title="Erstelle ein Embed")
+            await ctx.send_modal(modal)
+        else:
+            await ctx.response.send_message("Error: Du hast keine Berechtigung, diesen Befehl auszuführen.", ephemeral=True)
 
 
 def setup(bot):
