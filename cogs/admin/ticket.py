@@ -174,9 +174,6 @@ class Ticket(discord.ui.View):
             return
 
         await interaction.response.defer()
-        team_role_id = await db.get_teamrole(interaction.guild.id)
-        if team_role_id in [role.id for role in interaction.user.roles]:
-            server_id = interaction.guild.id
         member = interaction.user
         embed = discord.Embed(
             title="Ticket angenommen",
@@ -242,6 +239,7 @@ class Ticket(discord.ui.View):
                     color=discord.Color.red()
                 )
                 await interaction.response.send_message(embed=embed, ephemeral=True)
+                
                 #ticket_opener = channel.topic
                 #msg = await channel.send(f"{interaction.user.mention} has opened a ticket.")
                 #embed = discord.Embed(
@@ -257,35 +255,31 @@ class Ticket(discord.ui.View):
                 #description="You do not have the required role to perform this action.",
                 #color=discord.Color.red()
             #)
-            #await interaction.response.send_message(embed=error_embed, ephemeral=True)
+           # await interaction.response.send_message(embed=error_embed, ephemeral=True)
 
 
 #class frageticket(discord.ui.View):
-    #def __init__(self, user_in_db=False):
+    #def __init__(self):
         #super().__init__(timeout=None)
-        #self.user_in_db = user_in_db
-
-    #async def check_user_in_db(self, interaction):
-        #server_id = interaction.guild.id
+   
+       
 
 
     #@discord.ui.button(label="Yes, I still have questions", style=discord.ButtonStyle.primary, row=1, emoji="🎟️", custom_id="frage_ticket")
-    #async def ask_back(self, button, interaction):
-
-
+    #async def ask_back(self, button, interaction):           
             #ticket_opener = interaction.channel.topic
             #embed = discord.Embed(
                 #title="Ask questions",
                 #description=f"All clear {ticket_opener}, you can now ask your questions.",
                 #color=discord.Color.green()
-           # )
+           #)
             #await interaction.response.send_message(embed=embed)
 
     #@discord.ui.button(label="No, all done", style=discord.ButtonStyle.green, row=1, emoji="✅", custom_id="no_ticket")
     #async def no_back(self, button, interaction):
-       # server_id = interaction.guild.id
+        #server_id = interaction.guild.id
         #await asyncio.sleep(1)
-       # await interaction.channel.delete()
+        #await interaction.channel.delete()
 
 
 

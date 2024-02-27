@@ -18,7 +18,7 @@ class activity(commands.Cog):
             server_count = len(self.bot.guilds)
             total_member_count = sum(guild.member_count for guild in self.bot.guilds)
 
-            activity1 = discord.CustomActivity(name="🦊 × ByteBuddy")
+            activity1 = discord.CustomActivity(name="🦊 × Nico")
             activity2 = discord.CustomActivity(name="⚙ × Beta Phase")
             activity3 = discord.CustomActivity(name=f"🌳 × Bereits auf {server_count} Servern")
             activity4 = discord.CustomActivity(name=f"🐱‍🐉 × Wacht über {total_member_count} Member")
