@@ -75,7 +75,6 @@ class Ticketv2(ezcord.Cog, emoji="🎫"):
 
     @ezcord.Cog.listener()
     async def on_ready(self):
-        self.user = None 
         self.bot.add_view(CreateTicket())
         self.bot.add_view(Ticket())
 
@@ -109,17 +108,11 @@ class Ticketv2(ezcord.Cog, emoji="🎫"):
 
 
 
-    
-
-
-
 
 
 
 def setup(bot):
     bot.add_cog(Ticketv2(bot))
-
-
 
 
 
@@ -146,7 +139,7 @@ class CreateTicketSelect(discord.ui.View):
         super().__init__(timeout=None)
 
     @discord.ui.select(
-        custom_id="bro ich weiss nicht",
+        custom_id="bro_ich_weiss_nicht",
         min_values=1,
         max_values=2,
         placeholder="Make a selection of your ticket",
@@ -156,10 +149,9 @@ class CreateTicketSelect(discord.ui.View):
         category_id = await db.get_category(interaction.guild.id)
         teamrole_id = await db.get_teamrole(interaction.guild.id)
 
-        
         if category_id:
             category = discord.utils.get(interaction.guild.categories, id=category_id)
-
+            
             if category:
                 overwrites = {
                     interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
@@ -227,7 +219,6 @@ class Ticket(discord.ui.View):
         await interaction.followup.send(embed=embed)
         self.button_pressed = True
 
-
     @discord.ui.button(label="Close", style=discord.ButtonStyle.blurple, emoji="🔐", row=1, custom_id="close_ticket")
     async def close_ticket(self, button, interaction):
         team_role_id = await db.get_teamrole(interaction.guild.id)
@@ -259,18 +250,50 @@ class Ticket(discord.ui.View):
             message = await log_channel.send(file=transcript_file)
             link = await chat_exporter.link(message)
 
-            userembed = discord.Embed(
-                title="Dein Ticket wurde geschlossen",
-                description=f"Dein Ticket  wurde geschlossen.\n"
-                            f"```{interaction.channel.name}```\n"
-                            f"Das Transkript findest du [hier]({link}).",
-                color=discord.Color.blue(),
-            )
-
-            await interaction.user.send(embed=userembed)
+            topic = interaction.channel.topic
+            ticket_owner_name = topic.split("Ticket for ")[1].split(".")[0]
+            
+            ticket_owner = discord.utils.get(interaction.guild.members, name=ticket_owner_name)
+            
+            if ticket_owner:
+                userembed = discord.Embed(
+                    title="Dein Ticket wurde geschlossen",
+                    description=f"Dein Ticket wurde geschlossen.\n"
+                                f"```{interaction.channel.name}```\n"
+                                f"Das Transkript findest du [hier]({link}).",
+                    color=discord.Color.blue(),
+                )
+                await ticket_owner.send(embed=userembed)
 
             await asyncio.sleep(5)
             await interaction.channel.delete()
+
+
+
+
+
+    @discord.ui.select(
+    custom_id="ticket_actions",
+    min_values=1,
+    max_values=2,
+    placeholder="Choose an action",
+    options=options,
+    )
+    async def callback(self, select, interaction):
+        server_id = interaction.guild.id
+        teamrole_id = await db.get_teamrole(server_id)
+        
+        user_roles = [role.id for role in interaction.user.roles]
+        
+
+        if teamrole_id in user_roles:
+            selected_options = interaction.data['values']
+            channel = interaction.channel
+            await interaction.message.edit(view=self)
+            if "Add User" in selected_options:
+                await interaction.response.send_modal(UserModal())
+            elif "Remove User" in selected_options:
+                await interaction.response.send_modal(removeuser())
 
 
 
@@ -317,4 +340,9 @@ class removeuser(discord.ui.Modal):
 
 
 
+
+
+
+
+    
 
