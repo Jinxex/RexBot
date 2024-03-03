@@ -1,10 +1,12 @@
 import discord
 from discord.ext import commands
-from discord.commands import slash_command
+from discord.commands import SlashCommandGroup
 from discord.ext import commands
 import ezcord
 from datetime import datetime
+import chat_exporter
 import asyncio
+import io
 
 class ticketDB(ezcord.DBHandler):
     def __init__(self):
@@ -15,9 +17,12 @@ class ticketDB(ezcord.DBHandler):
             """CREATE TABLE IF NOT EXISTS ticket(
             server_id INTEGER PRIMARY KEY,
             category_id INTEGER DEFAULT 0,
-            teamrole_id INTEGER DEFAULT 0
+            teamrole_id INTEGER DEFAULT 0,
+            logs_Channel_id INTEGER DEFAULT 0
             )"""
         )
+
+
 
     async def set_category(self, server_id, category_id):
         await self.execute(
@@ -27,6 +32,8 @@ class ticketDB(ezcord.DBHandler):
 
     async def get_category(self, server_id):
         return await self.one("SELECT category_id FROM ticket WHERE server_id = ?", (server_id,))
+    
+
 
     async def set_teamrole(self, server_id, teamrole_id):
         await self.execute(
@@ -36,6 +43,21 @@ class ticketDB(ezcord.DBHandler):
 
     async def get_teamrole(self, server_id):
         return await self.one("SELECT teamrole_id FROM ticket WHERE server_id = ?", (server_id,))
+    
+
+
+
+
+    async def set_logs_Channel(self, server_id,logs_Channel_id):
+        await self.execute(
+            "INSERT INTO ticket (server_id, logs_Channel_id) VALUES (?, ?) ON CONFLICT(server_id) DO UPDATE SET logs_Channel_id = ?",
+            (server_id, logs_Channel_id, logs_Channel_id )
+        )
+
+    async def get_logs_Channel(self, server_id):
+        return await self.one("SELECT logs_Channel_id FROM ticket WHERE server_id = ?", (server_id,))
+
+
 
 
 
@@ -49,35 +71,58 @@ options = [
 ]
 
 class Ticketv2(ezcord.Cog, emoji="🎫"):
+
+
     @ezcord.Cog.listener()
     async def on_ready(self):
+        self.user = None 
         self.bot.add_view(CreateTicket())
         self.bot.add_view(Ticket())
-        #self.bot.add_view(frageticket())
 
 
-    @slash_command(description="Create a ticket")
+
+
+
+    ticket = SlashCommandGroup("ticket", default_member_permissions=discord.Permissions(administrator=True))
+
+
+
+
+    @ticket.command(name="setup",description="Create a ticket")
     @discord.guild_only()
-    async def ticket(self, ctx, category: discord.CategoryChannel, role: discord.Role):
-        if ctx.author.guild_permissions.administrator:
-            server_id = ctx.guild.id
-            category_id = category.id
-            teamrole_id = role.id
-            await db.set_category(server_id, category_id)
-            await db.set_teamrole(server_id, teamrole_id)
-            embed = discord.Embed(
-                title="Create a ticket",
-                description="**If you need support, click `📨 Create ticket` button below and create a ticket!**",
-                color=discord.Color.dark_green()
-            )
-            embed.timestamp = datetime.utcnow()
-            await ctx.channel.send(embed=embed, view=CreateTicket())
-            await ctx.respond("It was sent successfully", ephemeral=True)
-        else:
-            await ctx.respond("Error: You don't have permissions to use this command.", ephemeral=True)
+    async def setup_commmand(self, ctx, logs: discord.TextChannel,  category: discord.CategoryChannel, role: discord.Role):
+        server_id = ctx.guild.id
+        category_id = category.id
+        teamrole_id = role.id
+        logs_channel_id = logs.id
+        await db.set_logs_Channel(server_id, logs_channel_id)
+        await db.set_category(server_id, category_id)
+        await db.set_teamrole(server_id, teamrole_id)
+        embed = discord.Embed(
+            title="Create a ticket",
+            description="**If you need support, click `📨 Create ticket` button below and create a ticket!**",
+            color=discord.Color.dark_green()
+        )
+        embed.timestamp = datetime.utcnow()
+        await ctx.channel.send(embed=embed, view=CreateTicket())
+        await ctx.respond("It was sent successfully", ephemeral=True)
+
+
+
+    
+
+
+
+
+
 
 def setup(bot):
     bot.add_cog(Ticketv2(bot))
+
+
+
+
+
 
 class CreateTicket(discord.ui.View):
     def __init__(self):
@@ -145,7 +190,6 @@ class CreateTicketSelect(discord.ui.View):
 options = [
     discord.SelectOption(label="Add User", description="Add User to ticket", emoji="👥"),
     discord.SelectOption(label="Remove User", description="Remove a user from ticket", emoji="<:redcross:758380151238033419>"),
-    discord.SelectOption(label="Do you still have questions?", emoji="❓"),
 ]
 
 class Ticket(discord.ui.View):
@@ -196,92 +240,37 @@ class Ticket(discord.ui.View):
                             "_If not, you can do it manually!_",
                 color=discord.Color.dark_red()
             )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+            await interaction.response.edit_message(view=self)
+            await interaction.followup.send(embed=embed)
+
+            transcript = await chat_exporter.export(interaction.channel)
+
+            if transcript is None:
+                return
+
+            transcript_file = discord.File(
+                io.BytesIO(transcript.encode()),
+                filename=f"transcript-{interaction.channel.name}.html",
+            )
+            log_channel_id = await db.get_logs_Channel(server_id)
+            log_channel = interaction.client.get_channel(log_channel_id)
+
+            message = await log_channel.send(file=transcript_file)
+            link = await chat_exporter.link(message)
+
+            userembed = discord.Embed(
+                title="Dein Ticket wurde geschlossen",
+                description=f"Dein Ticket  wurde geschlossen.\n"
+                            f"```{interaction.channel.name}```\n"
+                            f"Das Transkript findest du [hier]({link}).",
+                color=discord.Color.blue(),
+            )
+
+            await interaction.user.send(embed=userembed)
+
             await asyncio.sleep(5)
             await interaction.channel.delete()
-        else:
-            embed = discord.Embed(
-                title="No Permission ❌",
-                description="You do not have permission to close this ticket.",
-                color=discord.Color.red()
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-
-
-
-
-    @discord.ui.select(
-    custom_id="ticket_actions",
-    min_values=1,
-    max_values=2,
-    placeholder="Choose an action",
-    options=options,
-    )
-    async def callback(self, select, interaction):
-        server_id = interaction.guild.id
-        teamrole_id = await db.get_teamrole(server_id)
-        
-        user_roles = [role.id for role in interaction.user.roles]
-        
-
-        if teamrole_id in user_roles:
-            selected_options = interaction.data['values']
-            channel = interaction.channel
-            await interaction.message.edit(view=self)
-            if "Add User" in selected_options:
-                await interaction.response.send_modal(UserModal())
-            elif "Remove User" in selected_options:
-                await interaction.response.send_modal(removeuser())
-            elif "Do you still have questions?" in selected_options:
-                embed = discord.Embed(
-                    title="It's coming soon",
-                    description="This doesn't work yet due to bugs, it's coming soon",
-                    color=discord.Color.red()
-                )
-                await interaction.response.send_message(embed=embed, ephemeral=True)
-                
-                #ticket_opener = channel.topic
-                #msg = await channel.send(f"{interaction.user.mention} has opened a ticket.")
-                #embed = discord.Embed(
-                    #title="Additional Questions",
-                    #description=f"Hey {ticket_opener}, if you have no further questions or don't click anything, the ticket will automatically close in 12 hours.",
-                    #color=discord.Color.gold()
-                #)
-                #embed.set_author(name=interaction.user.name, icon_url=interaction.user.avatar.url)
-                #await interaction.response.send_message(content=msg.content, embed=embed, view=frageticket())
-        #else:
-            #error_embed = discord.Embed(
-                #title="Access Denied",
-                #description="You do not have the required role to perform this action.",
-                #color=discord.Color.red()
-            #)
-           # await interaction.response.send_message(embed=error_embed, ephemeral=True)
-
-
-#class frageticket(discord.ui.View):
-    #def __init__(self):
-        #super().__init__(timeout=None)
-   
-       
-
-
-    #@discord.ui.button(label="Yes, I still have questions", style=discord.ButtonStyle.primary, row=1, emoji="🎟️", custom_id="frage_ticket")
-    #async def ask_back(self, button, interaction):           
-            #ticket_opener = interaction.channel.topic
-            #embed = discord.Embed(
-                #title="Ask questions",
-                #description=f"All clear {ticket_opener}, you can now ask your questions.",
-                #color=discord.Color.green()
-           #)
-            #await interaction.response.send_message(embed=embed)
-
-    #@discord.ui.button(label="No, all done", style=discord.ButtonStyle.green, row=1, emoji="✅", custom_id="no_ticket")
-    #async def no_back(self, button, interaction):
-        #server_id = interaction.guild.id
-        #await asyncio.sleep(1)
-        #await interaction.channel.delete()
-
-
 
 
 
@@ -324,3 +313,8 @@ class removeuser(discord.ui.Modal):
         overwrite = discord.PermissionOverwrite(view_channel=False, send_messages=False, read_message_history=False)
         await interaction.channel.set_permissions(user, overwrite=overwrite)
         await interaction.response.send_message(content=f"{user.mention} has been Remove to this ticket!", ephemeral=True)
+
+
+
+
+

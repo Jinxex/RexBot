@@ -1,5 +1,6 @@
-git+https://github.com/Pycord-Development/pycord
+py-cord
 python-dotenv
 git+https://github.com/tibue99/ezcord
 chat_exporter
 pygount
+chat_exporter
