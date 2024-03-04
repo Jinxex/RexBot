@@ -401,21 +401,3 @@ class nomodal(discord.ui.Modal):
             color=discord.Color.light_gray()
         )
         await interaction.response.send_message(embed=embed)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
