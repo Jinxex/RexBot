@@ -1,7 +1,5 @@
 import discord
-from discord.ext import commands
 from discord.commands import SlashCommandGroup
-from discord.ext import commands
 import ezcord
 from datetime import datetime
 import chat_exporter
@@ -257,25 +255,28 @@ class Ticket(discord.ui.View):
 
             topic = interaction.channel.topic
             ticket_owner_name = topic.split("Ticket for ")[1].split(".")[0]
-            
+
             ticket_owner = discord.utils.get(interaction.guild.members, name=ticket_owner_name)
-            
+
             if ticket_owner:
                 userembed = discord.Embed(
-                    title="Dein Ticket wurde geschlossen",
-                    description=f"Dein Ticket wurde geschlossen.\n"
+                    title="Your ticket has been closed",
+                    description=f"Your ticket has been closed.\n"
                                 f"```{interaction.channel.name}```\n"
-                                f"Das Transkript findest du [hier]({link}).",
+                                f"You can find the transcript [here]({link}).",
                     color=discord.Color.blue(),
                 )
                 await ticket_owner.send(embed=userembed)
 
             await asyncio.sleep(5)
             await interaction.channel.delete()
-
-
-
-
+        else:
+            embed = discord.Embed(
+                title="Unauthorized",
+                description=f"You do not have the necessary {team_role_id}to close tickets.",
+                color=discord.Color.red()
+            )
+            await interaction.response.send_message(embed=embed)
 
     @discord.ui.select(
     custom_id="ticket_actions",
