@@ -191,36 +191,37 @@ class Ticket(discord.ui.View):
         super().__init__(timeout=None)
         self.button_pressed = False
 
-
-
-    @discord.ui.button(label="Ticket accepted", style=discord.ButtonStyle.green, emoji="🗂️", row=1, custom_id="accepted_button")
+    @discord.ui.button(label="Ticket accepted", style=discord.ButtonStyle.green, emoji="🗂️", row=1,custom_id="accepted_button")
     async def assume_ticket(self, button, interaction):
         team_role_id = await db.get_teamrole(interaction.guild.id)
-        if team_role_id is None:  
-            await interaction.response.send_message("Die Teamrolle wurde nicht konfiguriert. Bitte kontaktiere den Administrator.", ephemeral=True)
+        if team_role_id is None:
+            await interaction.response.send_message(
+                "The team role has not been configured. Please contact the administrator.", ephemeral=True)
             return
 
         team_role = interaction.guild.get_role(team_role_id)
         if team_role is None:
-            await interaction.response.send_message("Die konfigurierte Teamrolle wurde nicht gefunden. Bitte kontaktiere den Administrator.", ephemeral=True)
+            await interaction.response.send_message(
+                "The configured team role was not found. Please contact the administrator.", ephemeral=True)
             return
 
         if team_role not in interaction.user.roles:
-            await interaction.response.send_message("Du bist nicht autorisiert, dieses Ticket anzunehmen.", ephemeral=True)
+            await interaction.response.send_message("You are not authorized to accept this ticket.", ephemeral=True)
             return
 
         if self.button_pressed:
-            await interaction.response.send_message("Du hast das Ticket bereits angenommen.", ephemeral=True)
+            await interaction.response.send_message("You have already accepted the ticket.", ephemeral=True)
             return
 
         await interaction.response.defer()
         member = interaction.user
         embed = discord.Embed(
-            title="Ticket angenommen",
-            description=f"{member.mention} wird sich nun um deine Anfrage kümmern!",
+            title="Ticket accepted",
+            description=f"{member.mention} will now attend to your request!",
             color=discord.Color.blue()
         )
         await interaction.followup.send(embed=embed)
+
         self.button_pressed = True
 
     @discord.ui.button(label="Close", style=discord.ButtonStyle.blurple, emoji="🔐", row=1, custom_id="close_ticket")
