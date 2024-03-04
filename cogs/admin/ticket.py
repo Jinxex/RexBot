@@ -78,7 +78,7 @@ class Ticketv2(ezcord.Cog, emoji="🎫"):
     async def on_ready(self):
         self.bot.add_view(CreateTicket())
         self.bot.add_view(Ticket())
-        self.bot.add_view(ticketremove())
+
 
 
 
@@ -110,15 +110,6 @@ class Ticketv2(ezcord.Cog, emoji="🎫"):
 
 
 
-    @ticket.command(name="remove", description="remove you are ticket setup")
-    async  def remove_commmand(self, ctx):
-        embed = discord.Embed(
-            title="remove",
-            description="Do you really want to delete your ticket?",
-            color=discord.Color.red()
-        )
-        await ctx.respond(embed=embed, view=ticketremove())
-
 
 
 
@@ -127,23 +118,7 @@ class Ticketv2(ezcord.Cog, emoji="🎫"):
 def setup(bot):
     bot.add_cog(Ticketv2(bot))
 
-class ticketremove(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
 
-    @discord.ui.button(label="yes im really", style=discord.ButtonStyle.red, emoji="✔", custom_id="remove_button")
-    async def remove_back(self, button, interaction):
-        embed = discord.Embed(
-            title="oh I'm sorry",
-            description="We're sorry you don't like the ticket system. We will improve it soon",
-            color=discord.Color.brand_red()
-        )
-        await interaction.response.send_message(embed=embed)
-
-
-    @discord.ui.button(label="no im really", style=discord.ButtonStyle.green, emoji="❌", custom_id="no_button")
-    async def no_back(self, button, interaction):
-        await  interaction.response.send_modal(nomodal())
 
 
 class CreateTicket(discord.ui.View):
@@ -382,22 +357,3 @@ class removeuser(discord.ui.Modal):
 
 
 
-class nomodal(discord.ui.Modal):
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            discord.ui.InputText(
-                label="why did you oppose deleting?",
-                placeholder="You can write a reason here",
-                style=discord.InputTextStyle.short,
-                custom_id="no_remove",
-            ),
-            title="Deleting not allowed",
-        )
-
-    async def callback(self, interaction: Interaction):
-        embed = discord.Embed(
-            title="Thanks for the rejection",
-            description="We appreciate your feedback regarding the deletion.",
-            color=discord.Color.light_gray()
-        )
-        await interaction.response.send_message(embed=embed)
