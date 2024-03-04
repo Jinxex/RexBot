@@ -13,7 +13,7 @@ class Banner(ezcord.Cog, emoji="❓"):
         description="📱〢Zeigt dir dein Banner oder das Banner eines Members an!",
     )
     @discord.guild_only()
-    async def banner_user(self, ctx, member: Option(discord.Member, "Das Mitglied, dessen Banner du sehen möchtest.")):
+    async def banner_user(self, ctx, member: Option(discord.Member, "Das Mitglied, dessen Banner du sehen möchtest.")): # type: ignore
 
         if member is None:
             member = ctx.author

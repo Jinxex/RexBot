@@ -168,10 +168,11 @@ class CreateTicketSelect(discord.ui.View):
 
                 msg = await channel.send(f"{team_role.mention if team_role else '@staff'} {interaction.user.mention} has opened a ticket.")
                 embed = discord.Embed(
-                    title="Ticket Created",
-                    description="Support will be with you shortly.",
-                    color=discord.Color.green()
-                )
+                title="🎉 Welcome to Customer Support! 🎉",
+                description="Welcome to our customer support! We sincerely appreciate you taking the time to reach out to us. Your concern is important to us, and we want to ensure that you receive the best possible assistance.\n\nYour ticket has been successfully created, and our dedicated team is standing by to assist you with any questions, issues, or concerns you may have. We understand that you may be awaiting a prompt resolution, and we are committed to responding to you as quickly as possible.\n\nPlease understand that processing your ticket may take some time as we aim to ensure that we provide you with the highest quality support. Your satisfaction is our priority, and we will spare no effort to ensure that your needs are met.\n\nWhile you wait for a response, please rest assured that we have received your message and are working to reply to you as soon as possible. Your patience is greatly appreciated.\n\nFeel free to contact us if you need further assistance or have any questions. Our team is available around the clock and is ready to assist you. We are here to help you and ensure that you have a positive experience.\n\nThank you for trusting our support team and for the opportunity to serve you!",
+                color=discord.Color.green()
+            )
+
 
                 await channel.send(embed=embed , view=Ticket())
                 await interaction.response.send_message(f"I've opened a ticket for you at {channel.mention}", ephemeral=True)
@@ -182,12 +183,15 @@ class CreateTicketSelect(discord.ui.View):
 options = [
     discord.SelectOption(label="Add User", description="Add User to ticket", emoji="👥"),
     discord.SelectOption(label="Remove User", description="Remove a user from ticket", emoji="<:redcross:758380151238033419>"),
+ 
 ]
 
 class Ticket(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
         self.button_pressed = False
+
+
 
     @discord.ui.button(label="Ticket accepted", style=discord.ButtonStyle.green, emoji="🗂️", row=1, custom_id="accepted_button")
     async def assume_ticket(self, button, interaction):
@@ -297,6 +301,11 @@ class Ticket(discord.ui.View):
 
 
 
+
+
+
+
+
 class UserModal(discord.ui.Modal):
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -336,6 +345,11 @@ class removeuser(discord.ui.Modal):
         overwrite = discord.PermissionOverwrite(view_channel=False, send_messages=False, read_message_history=False)
         await interaction.channel.set_permissions(user, overwrite=overwrite)
         await interaction.response.send_message(content=f"{user.mention} has been Remove to this ticket!", ephemeral=True)
+
+
+
+
+
 
 
 
