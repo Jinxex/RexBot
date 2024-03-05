@@ -1,11 +1,13 @@
 import discord
-from discord import Interaction
 from discord.commands import SlashCommandGroup
 import ezcord
 from datetime import datetime
 import chat_exporter
 import asyncio
 import io
+
+
+
 
 class ticketDB(ezcord.DBHandler):
     def __init__(self):
@@ -78,6 +80,7 @@ class Ticketv2(ezcord.Cog, emoji="🎫"):
     async def on_ready(self):
         self.bot.add_view(CreateTicket())
         self.bot.add_view(Ticket())
+        self.bot.add_view(ticketSettings())
 
 
 
@@ -109,6 +112,15 @@ class Ticketv2(ezcord.Cog, emoji="🎫"):
         await ctx.respond("It was sent successfully", ephemeral=True)
 
 
+    @ticket.command(name="settings", description="set your ticket system here")
+    async def settingscommand(self, ctx):
+        emmed = discord.Embed(
+            title="**Ticket settings**",
+            description="make your ticket system better!",
+            color=discord.Color.blue()
+        )
+        await ctx.respond(embed=emmed, view=ticketSettings(), ephemeral=True)
+
 
 
 
@@ -119,8 +131,65 @@ def setup(bot):
     bot.add_cog(Ticketv2(bot))
 
 
+class ticketSettings(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="Who can close the ticket?", style=discord.ButtonStyle.blurple, emoji="<:__:1214322496887853066>", custom_id="who_button")
+    async def handle_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        await interaction.followup.send("Please use the dropdown menu to select an option.", view=SettingsClose(), ephemeral=True)
+
+options = [
+    discord.SelectOption(label="Only Moderators", emoji="<:mod:1214322015981273108>"),
+    discord.SelectOption(label="All Users", emoji="<:user:1214377500621414452>")
+]
+
+class SettingsClose(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.select(
+        custom_id="settingsclose",
+        min_values=1,
+        max_values=1,
+        placeholder="Determine who can close the ticket",
+        options=options,
+    )
+    async def handle_dropdown(self, select, interaction):
+        selected_option = interaction.data["values"][0]
+        embed = discord.Embed(
+            title="🎟 Who can close the ticket",
+            description=f"Selected option: `{selected_option}`"
+        )
+        await interaction.respond(embed=embed, view=weiterbutton(), ephemeral=True)
 
 
+
+class weiterbutton(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="further", style=discord.ButtonStyle.green, emoji="▶", custom_id="weider_button")
+    async def weiter_back(self, button, interaction):
+        embed = discord.Embed(
+            title="do you want to continue?",
+            description="If yes, you can continue again.",
+            color=discord.Color.embed_background()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True, view=ticketname())
+
+    @discord.ui.button(label="no thanks, I'm done", style=discord.ButtonStyle.red, emoji="🔒")
+    async def no_back(self, button, interaction):
+        embed = discord.Embed(
+            title="No thanks",
+            description=f"no thanks, I'm done",
+            color=discord.Color.blue()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+class ticketname(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
 class CreateTicket(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None) 
@@ -279,7 +348,7 @@ class Ticket(discord.ui.View):
         else:
             embed = discord.Embed(
                 title="Unauthorized",
-                description=f"You do not have the necessary {team_role_id}to close tickets.",
+                description=f"You do not have the necessary role  close tickets.",
                 color=discord.Color.red()
             )
             await interaction.response.send_message(embed=embed)
