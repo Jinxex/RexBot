@@ -177,7 +177,7 @@ class weiterbutton(discord.ui.View):
             description="If yes, you can continue again.",
             color=discord.Color.embed_background()
         )
-        await interaction.response.send_message(embed=embed, ephemeral=True, view=ticketname())
+        await interaction.respond(embed=embed, ephemeral=True)
 
     @discord.ui.button(label="no thanks, I'm done", style=discord.ButtonStyle.red, emoji="🔒")
     async def no_back(self, button, interaction):
@@ -187,9 +187,7 @@ class weiterbutton(discord.ui.View):
             color=discord.Color.blue()
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
-class ticketname(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
+
 class CreateTicket(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None) 
