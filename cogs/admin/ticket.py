@@ -5,12 +5,10 @@ from datetime import datetime
 import chat_exporter
 import asyncio
 import io
-
+from discord.ext import commands
 
 class TicketDB(ezcord.DBHandler):
     def __init__(self):
-        """
-        """
         super().__init__("db/ticket.db")
 
     async def setup(self):
@@ -52,22 +50,22 @@ class TicketDB(ezcord.DBHandler):
 
 
 db = TicketDB()
-
 options = [
-    discord.SelectOption(label="Support", description="If you need support, please open a ticket", emoji="🎫"),
-    discord.SelectOption(label="Report user", description="report a user", emoji="👥"),
-    discord.SelectOption(label="Apply for team", description="Apply for your team ", emoji="💼"),
-]
-
-
+        discord.SelectOption(label="Support", description="If you need support, please open a ticket", emoji="🎫"),
+        discord.SelectOption(label="Report user", description="report a user", emoji="👥"),
+        discord.SelectOption(label="Apply for team", description="Apply for your team ", emoji="💼"),
+    ]
 class Ticket(ezcord.Cog, emoji="🎫"):
+    def __init__(self, bot):
+        self.bot = bot
+
+
 
     @ezcord.Cog.listener()
     async def on_ready(self):
         self.bot.add_view(CreateTicket())
         self.bot.add_view(TicketView())
         self.bot.add_view(CreateTicketSelect())
-
 
     ticket = SlashCommandGroup("ticket", default_member_permissions=discord.Permissions(administrator=True))
 
@@ -97,21 +95,8 @@ class Ticket(ezcord.Cog, emoji="🎫"):
 
 
 
-
 def setup(bot):
     bot.add_cog(Ticket(bot))
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
