@@ -1,0 +1,7 @@
+general:
+  bug:
+    name: error
+    description: Send a direct message to the owner about the error!
+    options:
+      reason:
+        description: Which errors would you like to report?

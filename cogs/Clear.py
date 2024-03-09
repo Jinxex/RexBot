@@ -2,18 +2,18 @@ import discord
 from discord.ext import commands
 from discord.commands import slash_command
 
-
 class Clear(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @slash_command(description="Löscht Nachrichten")
+    @slash_command(description="Clears messages")
+    @discord.default_permissions(administrator=True, kick_members=True)
     @discord.guild_only()
     async def clear(self, ctx, amount: int):
         if ctx.author.guild_permissions.administrator:
             if amount > 100:
                 await ctx.respond(
-                    "Du kannst nicht mehr als 100 Nachrichten auf einmal löschen!"
+                    "You cannot delete more than 100 messages at once!"
                 )
             else:
                 count_members = {}
@@ -36,12 +36,11 @@ class Clear(commands.Cog):
 
                 await ctx.channel.purge(limit=amount + 1)
                 await ctx.respond(
-                    f"Es wurden {messages_deleted} Nachrichten gelöscht :white_check_mark: !\n\n{final_string}",
+                    f"{messages_deleted} messages were deleted :white_check_mark: !\n\n{final_string}",
                     ephemeral=True,
                 )
         else:
-            await ctx.response.send_message("Error: Du hast keine Berechtigung, diesen Befehl auszuführen.", ephemeral=True)
-
+            await ctx.respond("Error: You do not have permission to execute this command.", ephemeral=True)
 
 def setup(bot):
     bot.add_cog(Clear(bot))

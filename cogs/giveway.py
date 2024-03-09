@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord.commands import SlashCommandGroup, Option
+from discord.commands import SlashCommandGroup, option
 import asyncio
 import ezcord
 import aiosqlite
@@ -23,16 +23,16 @@ class Giveaway(commands.Cog):
                 """)
             await db.commit()
 
-    giveway = SlashCommandGroup("giveway")
+    giveway = SlashCommandGroup("giveaway", default_member_permissions=discord.Permissions(administrator=True))
 
     @giveway.command(description="Start a giveaway")
-    async def start(self, ctx: discord.ApplicationContext, time: str, description="Example 10s, 10m, 10h, 10d"):
-        if ctx.author.guild_permissions.administrator:
+    @option("time", description="Example 10s, 10m, 10h, 10d")
+    async def start(self, ctx: discord.ApplicationContext, time: str):
+        try:
             modal = Modal(title="Create a giveaway", time=time)
             await ctx.send_modal(modal)
-        else:
-            await ctx.response.send_message("Error: Du hast keine Berechtigung, diesen Befehl auszuführen.", ephemeral=True)
-
+        except commands.BadArgument as e:
+            await ctx.respond(embed=discord.Embed(title="Error", description=str(e), color=discord.Color.red()), ephemeral=True)
 
 def setup(bot):
     bot.add_cog(Giveaway(bot))
@@ -58,9 +58,9 @@ class Modal(discord.ui.Modal):
         )
 
     def parse_duration(self, duration_text):
-        time_regex = re.match(r'(\d+)([smh]?)', duration_text.lower())
+        time_regex = re.match(r'(\d+)([smhd]?)', duration_text.lower())
         if not time_regex:
-            raise commands.BadArgument("Invalid duration format. Use numbers followed by 's' for seconds, 'm' for minutes, or 'h' for hours.")
+            raise commands.BadArgument("Invalid duration format. Use numbers followed by 's' for seconds, 'm' for minutes, 'h' for hours, or 'd' for days.")
 
         amount, unit = time_regex.groups()
         amount = int(amount)
@@ -89,51 +89,50 @@ class Modal(discord.ui.Modal):
         msg2 = msg.id
         deleting = await interaction.channel.send(view=GvwButton(msg=msg2, modal=self,time=time,msge=msg))
         await asyncio.sleep(time)
-        teilnehmer = 0
+        participants = 0
 
-        teilnehmer2 = 0
         async with aiosqlite.connect("db/giveaway.db") as db:
             async with db.execute(
                     """
                     SELECT user_id FROM giveaway
                     WHERE giveaway_id = ?
                     """, (msg.id,)) as cursor:
-                trow = await cursor.fetchall()
-                for row in trow:
-                    teilnehmer += 1
-                if teilnehmer < 2:
+                rows = await cursor.fetchall()
+                for row in rows:
+                    participants += 1
+                if participants < 2:
                     embed = discord.Embed(title="🚫 Giveaway canceled", description="Nobody joined the giveaway.", color=discord.Color.red())
                     n = datetime.datetime.now()
                     embed.add_field(name="🎉 Giveaway Informations",
-                                    value=f"Hosted by {interaction.user.mention}\n 🛫• Started at {discord.utils.format_dt(b, 'R')}\n 🔚• Ended at {discord.utils.format_dt(n, 'R')}\n\n⭐• Participants: {teilnehmer}")
+                                    value=f"Hosted by {interaction.user.mention}\n 🛫• Started at {discord.utils.format_dt(b, 'R')}\n 🔚• Ended at {discord.utils.format_dt(n, 'R')}\n\n⭐• Participants: {participants}")
                     await msg.edit(content="", embed=embed, view=None)
                     await deleting.delete()
                 else:
-                    gewinner = random.randint(1, teilnehmer)
+                    winner = random.randint(1, participants)
 
                     async with db.execute("SELECT user_id FROM giveaway WHERE giveaway_id = ?", (msg.id,)) as cursor:
-                        grow = await cursor.fetchall()
-                    for row in grow:
-                        teilnehmer2 += 1
-                        if gewinner == teilnehmer2:
-                            gewinner2 = row[0]
-                            embed = discord.Embed(
-                                title="🎉 Giveaway Won",
-                                description=f"🥳 Congratulations <@{gewinner2}>, you won the Giveaway!",
-                                colour=discord.Color.green()
-                            )
-                            n = datetime.datetime.now()
-                            embed.add_field(name="🎉 Giveaway Informations", value=f"Hosted by {interaction.user.mention}\n🛫 • Started at {discord.utils.format_dt(b, 'R')}\n 🔚• Ended at {discord.utils.format_dt(n, 'R')}\n\n⭐• Participants: {teilnehmer}")
-                            gewinner_message = await interaction.channel.send(embed=embed)
-                            embed2 = discord.Embed(title="🎉 Giveaway ended", description="👋• See below!", color=discord.Color.purple())
-                            await deleting.delete()
-                            await msg.edit(content=f"🎉 <@{gewinner2}>", embed=embed2, view=None)
-                            await discord.utils.sleep_until(gewinner_message.created_at + datetime.timedelta(hours=48))
-                            await gewinner_message.delete()
+                        winner_id = None
+                        for i in range(winner):
+                            winner_id = await cursor.fetchone()
+                        winner_id = winner_id[0] if winner_id else None
+                    if winner_id:
+                        embed = discord.Embed(
+                            title="🎉 Giveaway Won",
+                            description=f"🥳 Congratulations <@{winner_id}>, you won the Giveaway!",
+                            colour=discord.Color.green()
+                        )
+                        n = datetime.datetime.now()
+                        embed.add_field(name="🎉 Giveaway Informations", value=f"Hosted by {interaction.user.mention}\n🛫 • Started at {discord.utils.format_dt(b, 'R')}\n 🔚• Ended at {discord.utils.format_dt(n, 'R')}\n\n⭐• Participants: {participants}")
+                        winner_message = await interaction.channel.send(embed=embed)
+                        embed2 = discord.Embed(title="🎉 Giveaway ended", description="👋• See below!", color=discord.Color.purple())
+                        await deleting.delete()
+                        await msg.edit(content=f"🎉 <@{winner_id}>", embed=embed2, view=None)
+                        await discord.utils.sleep_until(winner_message.created_at + datetime.timedelta(hours=48))
+                        await winner_message.delete()
 
 
 class GvwButton(discord.ui.View):
-    def __init__(self, msg,msge, modal,time):
+    def __init__(self, msg, msge, modal, time):
         super().__init__(timeout=None)
         self.msg2 = msge
         self.msg = msg
@@ -147,7 +146,7 @@ class GvwButton(discord.ui.View):
                                   (self.msg, interaction.user.id)) as cursor:
                 ids = await cursor.fetchall()
         if ids:
-            await interaction.response.send_message("🚫 You already joined the Giveaway. Leave it?", view=LeaveButton(msg=self.msg, modal=self.modal,msge=self.msg2,time=self.time), ephemeral=True)
+            await interaction.response.send_message("🚫 You already joined the Giveaway. Leave it?", view=LeaveButton(msg=self.msg, modal=self.modal, msge=self.msg2, time=self.time), ephemeral=True)
         else:
             self.modal.participants_count += 1
             print(f"DEBUG: Participants count increased to {self.modal.participants_count}")
@@ -163,8 +162,9 @@ class GvwButton(discord.ui.View):
                 VALUES (?,?)
                 """, (interaction.user.id, self.msg))
                 await db.commit()
+
 class LeaveButton(discord.ui.View):
-    def __init__(self,msge, msg,time, modal):
+    def __init__(self, msge, msg, time, modal):
         super().__init__(timeout=None)
         self.msg2 = msge
         self.msg = msg
@@ -185,6 +185,3 @@ class LeaveButton(discord.ui.View):
             DELETE FROM giveaway WHERE user_id = ? and giveaway_id = ?
             """, (interaction.user.id, self.msg))
             await db.commit()
-
-
-

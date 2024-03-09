@@ -7,14 +7,15 @@ class Embed(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @slash_command(description="Erstelle ein Embed")
+    @slash_command(description="Create an Embed")
+    @discord.default_permissions(administrator=True, kick_members=True)
     @discord.guild_only()
     async def embed(self, ctx):
         if ctx.author.guild_permissions.administrator:
-            modal = Modal(bot=self.bot, title="Erstelle ein Embed")
+            modal = Modal(bot=self.bot, title="Create an Embed")
             await ctx.send_modal(modal)
         else:
-            await ctx.response.send_message("Error: Du hast keine Berechtigung, diesen Befehl auszuführen.", ephemeral=True)
+            await ctx.response.send_message("Error: You do not have permission to execute this command.", ephemeral=True)
 
 
 def setup(bot):
@@ -25,27 +26,27 @@ class Modal(discord.ui.Modal):
     def __init__(self, bot, *args, **kwargs):
         self.bot = bot
         super().__init__(
-            discord.ui.InputText(label="Embed Titel", placeholder="Titel reinscheiben"),
+            discord.ui.InputText(label="Embed Title", placeholder="Enter title"),
             discord.ui.InputText(
-                label="Embed Beschreibung",
-                placeholder="Text reinschreiben",
+                label="Embed Description",
+                placeholder="Enter text",
                 style=discord.InputTextStyle.long,
             ),
             discord.ui.InputText(
                 label="Embed Thumbnail",
-                placeholder="Thumbnail URL eintragen, ansonsten leer lassen",
+                placeholder="Enter thumbnail URL, otherwise leave empty",
                 style=discord.InputTextStyle.short,
                 required=False,
             ),
             discord.ui.InputText(
                 label="Embed Image",
-                placeholder="Image URL eintragen, ansonsten leer lassen",
+                placeholder="Enter image URL, otherwise leave empty",
                 style=discord.InputTextStyle.short,
                 required=False,
             ),
             discord.ui.InputText(
                 label="Channel ID",
-                placeholder="ID eintragen",
+                placeholder="Enter ID",
                 style=discord.InputTextStyle.short,
             ),
             *args,
@@ -68,6 +69,6 @@ class Modal(discord.ui.Modal):
 
         await channel.send(embed=embed)
         await interaction.response.send_message(
-            f"Embed erfolgreich in {channel.mention} erstellt und gesendet!",
+            f"Embed successfully created and sent in {channel.mention}!",
             ephemeral=True,
         )

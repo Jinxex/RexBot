@@ -3,7 +3,7 @@ from discord.ext import commands
 import asyncio
 from discord.ext import tasks
 
-class activity(commands.Cog):
+class Activity(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.update_activity.start()
@@ -20,8 +20,8 @@ class activity(commands.Cog):
 
             activity1 = discord.CustomActivity(name="🦊 × Nico")
             activity2 = discord.CustomActivity(name="⚙ × Beta Phase")
-            activity3 = discord.CustomActivity(name=f"🌳 × Bereits auf {server_count} Servern")
-            activity4 = discord.CustomActivity(name=f"🐱‍🐉 × Wacht über {total_member_count} Member")
+            activity3 = discord.CustomActivity(name=f"🌳 × Already on {server_count} servers")
+            activity4 = discord.CustomActivity(name=f"🐱‍🐉 × Watching over {total_member_count} members")
             await self.bot.change_presence(activity=activity1)
             await asyncio.sleep(2)
             await self.bot.change_presence(activity=activity2)
@@ -31,4 +31,4 @@ class activity(commands.Cog):
             await self.bot.change_presence(activity=activity4)
 
 def setup(bot):
-    bot.add_cog(activity(bot))
+    bot.add_cog(Activity(bot))
