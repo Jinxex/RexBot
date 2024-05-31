@@ -6,7 +6,7 @@ import ezcord
 
 class rulesDB(ezcord.DBHandler):
     def __init__(self):
-        super().__init__("db/rules.db")
+        super().__init__("database/rules.db")
 
     async def setup(self):
         await self.execute(

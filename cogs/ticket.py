@@ -1,97 +1,365 @@
 import discord
-from discord.commands import SlashCommandGroup, option
+from discord.commands import SlashCommandGroup, option, Option
 import ezcord
 from datetime import datetime
 import chat_exporter
 import asyncio
 import io
-from discord.ext import commands
+
+from discord.utils import basic_autocomplete
+
 
 class TicketDB(ezcord.DBHandler):
     def __init__(self):
-        super().__init__("db/ticket.db")
+        super().__init__("database/ticket.db")
 
     async def setup(self):
+        try:
+            await self.execute(
+                """CREATE TABLE IF NOT EXISTS ticket(
+                guild_id INTEGER PRIMARY KEY,
+                category_id INTEGER DEFAULT 0,
+                teamrole_id INTEGER DEFAULT 0,
+                logs_channel_id INTEGER DEFAULT 0,
+                channel_id INTEGER DEFAULT 0,
+                message_id INTEGER DEFAULT 0
+                )"""
+            )
+            await self.execute(
+                """CREATE TABLE IF NOT EXISTS ticket_options(
+                guild_id INTEGER,
+                option_name TEXT,
+                FOREIGN KEY(guild_id) REFERENCES ticket(guild_id)
+                )"""
+            )
+            await self.execute(
+                """CREATE TABLE IF NOT EXISTS user(
+                guild_id INTEGER,
+                user_id INTEGER,
+                FOREIGN KEY(user_id, guild_id ) REFERENCES ticket(user_id, guild_id)
+                )"""
+            )
+            print("Tables 'ticket' and 'names' created successfully")
+        except Exception as e:
+            print(f"An error occurred while creating the tables: {e}")
+
+
+
+    async def set_category(self, guild_id, category_id):
         await self.execute(
-            """CREATE TABLE IF NOT EXISTS ticket(
-            server_id INTEGER PRIMARY KEY,
-            category_id INTEGER DEFAULT 0,
-            teamrole_id INTEGER DEFAULT 0,
-            logs_channel_id INTEGER DEFAULT 0
-            )"""
+            "INSERT OR IGNORE INTO ticket  (guild_id, category_id) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET category_id = ?",
+            (guild_id, category_id, category_id)
         )
 
-    async def set_category(self, server_id, category_id):
+    async def get_category(self, guild_id):
+        return await self.one("SELECT category_id FROM ticket WHERE guild_id = ?", (guild_id,))
+
+    async def set_teamrole(self, guild_id, teamrole_id):
         await self.execute(
-            "INSERT INTO ticket (server_id, category_id) VALUES (?, ?) ON CONFLICT(server_id) DO UPDATE SET category_id = ?",
-            (server_id, category_id, category_id)
+            "INSERT OR IGNORE INTO ticket (guild_id, teamrole_id) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET teamrole_id = ?",
+            (guild_id, teamrole_id, teamrole_id)
         )
 
-    async def get_category(self, server_id):
-        return await self.one("SELECT category_id FROM ticket WHERE server_id = ?", (server_id,))
+    async def get_teamrole(self, guild_id):
+        return await self.one("SELECT teamrole_id FROM ticket WHERE guild_id = ?", (guild_id,))
 
-    async def set_teamrole(self, server_id, teamrole_id):
+    async def set_logs_channel(self, guild_id, logs_channel_id):
         await self.execute(
-            "INSERT INTO ticket (server_id, teamrole_id) VALUES (?, ?) ON CONFLICT(server_id) DO UPDATE SET teamrole_id = ?",
-            (server_id, teamrole_id, teamrole_id)
+            "INSERT OR IGNORE INTO ticket (guild_id, logs_channel_id) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET logs_channel_id = ?",
+            (guild_id, logs_channel_id, logs_channel_id)
         )
 
-    async def get_teamrole(self, server_id):
-        return await self.one("SELECT teamrole_id FROM ticket WHERE server_id = ?", (server_id,))
+    async def get_logs_channel(self, guild_id):
+        return await self.one("SELECT logs_channel_id FROM ticket WHERE guild_id = ?", (guild_id,))
 
-    async def set_logs_channel(self, server_id, logs_channel_id):
+    async def set_channel(self, guild_id, channel_id):
         await self.execute(
-            "INSERT INTO ticket (server_id, logs_channel_id) VALUES (?, ?) ON CONFLICT(server_id) DO UPDATE SET logs_channel_id = ?",
-            (server_id, logs_channel_id, logs_channel_id)
+            "INSERT OR IGNORE INTO ticket (guild_id, channel_id) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET "
+            "channel_id = ?",
+            (guild_id, channel_id, channel_id)
         )
 
-    async def get_logs_channel(self, server_id):
-        return await self.one("SELECT logs_channel_id FROM ticket WHERE server_id = ?", (server_id,))
+    async def get_channel(self, guild_id):
+        return await self.one("SELECT channel_id FROM ticket WHERE guild_id = ?", (guild_id,))
+
+    async def set_message(self, guild_id, message_id):
+        await self.execute(
+            "INSERT OR IGNORE INTO ticket (guild_id, message_id) VALUES (?, ?) ON CONFLICT(guild_id) DO UPDATE SET message_id = ?",
+            (guild_id, message_id, message_id)
+        )
+
+    async def get_message(self, guild_id):
+        return await self.one("SELECT message_id FROM ticket WHERE guild_id = ?", (guild_id,))
+
+    async def add_option(self, guild_id, option_name):
+        await self.execute(
+            "INSERT INTO ticket_options (guild_id, option_name) VALUES (?, ?)",
+            (guild_id, option_name)
+        )
+
+    async def get_options(self, guild_id):
+        options = await self.all("SELECT option_name FROM ticket_options WHERE guild_id = ?", (guild_id,))
+        print(f"Options for guild {guild_id}: {options}")
+        return options
+
+
+    async def remove_option(self, guild_id, option_name):
+        await self.execute("DELETE FROM ticket_options WHERE guild_id = ? AND option_name = ?", (guild_id, option_name))
+
+
+
+    async def name_exists(self, guild_id, option_name):
+        return await self.one("SELECT option_name FROM ticket_options WHERE guild_id = ? AND option_name = ?",
+                              (guild_id, option_name))
+        return result is not None
+
+
+    async def setup_exists(self, guild_id):
+        return await self.one("SELECT guild_id FROM ticket WHERE guild_id = ?", (guild_id,))
+
+    async def ban_user(self, guild_id, user_id):
+        await self.execute(
+            "INSERT INTO user (guild_id, user_id) VALUES (?, ?)",
+            (guild_id, user_id)
+        )
+
+
+    async def remove_ban(self, guild_id, user_id):
+        await self.execute("DELETE FROM user WHERE guild_id = ? AND user_id = ?", (guild_id, user_id))
+
+
+    async def get_ban(self, guild_id):
+        return await self.one("SELECT user_id FROM user WHERE guild_id = ?", (guild_id,))
+
+
 
 
 db = TicketDB()
-options = [
-        discord.SelectOption(label="Support", description="If you need support, please open a ticket", emoji="🎫"),
-        discord.SelectOption(label="Report user", description="report a user", emoji="👥"),
-        discord.SelectOption(label="Apply for team", description="Apply for your team ", emoji="💼"),
-    ]
+
+t_options = [
+    discord.SelectOption(label="Ticket", emoji="🎫")
+]
+
+
+async def get_ticket(ctx: discord.AutocompleteContext):
+    try:
+        active_options = await db.get_options(ctx.interaction.guild.id)
+        if active_options:
+            ticket_options = [discord.OptionChoice(name=name, value=name) for name in active_options]
+            return ticket_options
+        else:
+            print("Keine Optionen aus der Datenbank abgerufen.")
+            return []
+    except Exception as e:
+        print(f"Fehler beim Abrufen der Ticket-Optionen: {e}")
+        return []
+
+my_option_count = 0
 class Ticket(ezcord.Cog, emoji="🎫"):
     def __init__(self, bot):
         self.bot = bot
-
-
+        self.ticket_owner = True
+        self.channel_name = True
+        self.logs_channel_name = True
+        self.category_name = True
 
     @ezcord.Cog.listener()
     async def on_ready(self):
-        self.bot.add_view(CreateTicket())
         self.bot.add_view(TicketView())
-        self.bot.add_view(CreateTicketSelect())
+        self.bot.add_view(QuestionsButton(self.ticket_owner))
+        self.bot.add_view(TicketRole(self.channel_name, self.logs_channel_name, self.category_name))
 
     ticket = SlashCommandGroup("ticket", default_member_permissions=discord.Permissions(administrator=True))
 
-    @ticket.command(name="setup", description="Create a ticket")
-    @discord.guild_only()
-    @option("category", description="Select a category")
-    @option("role", description="Select a role")
-    @option("logs", description="Select a logs Channel")
-    async def setup_command(self, ctx, category: discord.CategoryChannel, logs: discord.TextChannel,
-                            role: discord.Role):
-        server_id = ctx.guild.id
+    @ticket.command(description="Setup the ticket system")
+    @option("category", description="Select a category", type=discord.CategoryChannel)
+    @option("ticket_channel", description="Select a ticket channel", type=discord.TextChannel)
+    @option("logs", description="Select a logs Channel", type=discord.TextChannel)
+    async def setup(self, ctx, category: discord.CategoryChannel, ticket_channel: discord.TextChannel,
+                    logs: discord.TextChannel):
+        guild_id = ctx.guild.id
+        await ctx.defer(ephemeral=True)
+
         category_id = category.id
-        teamrole_id = role.id
         logs_channel_id = logs.id
-        await db.set_logs_channel(server_id, logs_channel_id)
-        await db.set_category(server_id, category_id)
-        await db.set_teamrole(server_id, teamrole_id)
+        channel_id = ticket_channel.id
+
+        # Set the channels in the database
+        await db.set_channel(guild_id, channel_id)
+        await db.set_logs_channel(guild_id, logs_channel_id)
+        await db.set_category(guild_id, category_id)
+
+        category_name = category.name
+        logs_channel_name = logs.name
+        channel_name = ticket_channel.name
+
+        # Get options for this guild from the database
+        options = await db.get_options(guild_id)
+        t_options = [discord.SelectOption(label=option, emoji="🎫") for option in options]
 
         embed = discord.Embed(
-            title="Create a ticket",
-            description="**If you need support, click `📨 Create ticket` button below and create a ticket!**",
+            title="🎫 Ticket System Setup",
+            description="Welcome to the ticket system setup.",
             color=discord.Color.dark_green()
         )
-        embed.timestamp = datetime.utcnow()
-        await ctx.send(embed=embed, view=CreateTicket())
-        await ctx.respond("It was sent successfully", ephemeral=True)
+        embed.add_field(name="🔘 Open Tickets", value=f"``{category_name}``", inline=False)
+        embed.add_field(name="🎫 Ticket Channel", value=f"``{channel_name}``", inline=False)
+        embed.add_field(name="📜 Log Channel", value=f"``{logs_channel_name}``", inline=False)
+        embed.add_field(name="Great! Now you can select roles that should have access to tickets.",
+                        value="Click on Continue afterward.", inline=False)
+
+        setup_message = await ctx.send(embed=embed, view=TicketRole(channel_name, logs_channel_name, category_name))
+
+        channel_id = await db.get_channel(guild_id)
+        if channel_id:
+            ticket_channel = ctx.guild.get_channel(channel_id)
+            if ticket_channel:
+                embed = discord.Embed(
+                    title="Ticket System",
+                    description="Choose a category to contact support.",
+                    color=discord.Color.blue()
+                )
+                select = TutorialSelect()
+                view = discord.ui.View(timeout=None)
+                view.add_item(select)
+                message = await ticket_channel.send(embed=embed, view=view)
+                await db.set_message(guild_id, message.id)
+            else:
+                print(f"Channel with ID {channel_id} not found.")
+        else:
+            print(f"No channel ID found for server {guild_id}.")
+
+        await ctx.respond("The setup was completed successfully", ephemeral=True, delete_after=10)
+        print(f"Setting up ticket system for guild: {guild_id}")
+
+    @ticket.command(description="ban user from ticket system")
+    async def ban_user(self, ctx, member: discord.Member):
+        await ctx.defer(ephemeral=True)
+        guild_id = ctx.guild.id
+        user_id = ctx.author.id
+        await db.ban_user(guild_id, user_id)
+        ban_embed = discord.Embed(
+            title="Ticket System",
+            description=f"You have The {member.mention} has been banned from the ticket system.",
+        )
+        await ctx.respond(embed=ban_embed, ephemeral=True)
+
+
+
+    @ticket.command(description="unban user from ticket system")
+    async def unban_user(self, ctx, member: discord.Member):
+        await ctx.defer(ephemeral=True)
+        guild_id = ctx.guild.id
+        user_id = ctx.author.id
+        await db.remove_ban(guild_id, user_id)
+        unban_embed = discord.Embed(
+            title="Ticket System",
+            description=f"You have The {member.mention} has been unbanned from the ticket system.",
+        )
+        await ctx.respond(embed=unban_embed, ephemeral=True)
+
+    @ticket.command(description="Get all bans from the server")
+    async def get_bans(self, ctx):
+        await ctx.defer(ephemeral=True)
+
+        guild_id = ctx.guild.id
+        db_banned_users = await db.get_ban(guild_id)
+        if isinstance(db_banned_users, int):
+            db_banned_users = [db_banned_users]
+        elif db_banned_users is None:
+            db_banned_users = []
+
+        guild = ctx.guild
+        server_bans = [ban async for ban in guild.bans()]
+
+        combined_ban_list = []
+
+        for user_id in db_banned_users:
+            user = guild.get_member(user_id) or await guild.fetch_member(user_id)
+            if user:
+                combined_ban_list.append(f"{user.name}#{user.discriminator} (ID: {user.id})")
+
+        for ban in server_bans:
+            user = ban.user
+            combined_ban_list.append(f"{user.name}#{user.discriminator} (ID: {user.id})")
+
+        if combined_ban_list:
+            ban_list_str = "\n".join(combined_ban_list)
+            ban_embed = discord.Embed(
+                title="Ticket System",
+                description=f"The following users are banned:\n{ban_list_str}",
+            )
+        else:
+            ban_embed = discord.Embed(
+                title="Ticket System",
+                description="There are no banned users on this server.",
+            )
+
+        await ctx.respond(embed=ban_embed, ephemeral=True)
+
+    @ticket.command(description="Set the ticket settings")
+    async def settings(self, ctx):
+        embed = discord.Embed(
+            title="Ticket System Settings",
+            description="You can change the settings for the ticket system.\n\n (It is in progress and will be released with a new update)",
+            color=discord.Color.dark_green()
+        )
+        await ctx.respond(embed=embed, ephemeral=True, delete_after=10)
+
+    @ticket.command(description="Add a ticket option")
+    async def select(self, ctx, name: str, emoji: str):
+        global my_option_count
+        await ctx.defer(ephemeral=True)
+        ticket_message = await db.get_message(ctx.guild.id)
+        if ticket_message:
+            try:
+                if await db.name_exists(ctx.guild.id, name):
+                    await ctx.respond("This name is already in use. Please choose a different name.", ephemeral=True)
+                    return
+                if my_option_count >= 5:
+                    await ctx.respond(
+                        "You have reached the maximum number of options (5). Please remove an option before adding a new one.",
+                        ephemeral=True)
+                    return
+
+                message = await ctx.channel.fetch_message(ticket_message)
+                select = TutorialSelect()
+                select.append_option(discord.SelectOption(label=name, emoji=emoji))
+                view = discord.ui.View()
+                view.add_item(select)
+                await message.edit(view=view)
+                await ctx.respond("The option was added successfully.", ephemeral=True)
+                my_option_count += 1
+            except Exception as e:
+                await ctx.respond(f"An error occurred: {e}", ephemeral=True)
+            print(name)
+
+            await db.add_option(ctx.guild.id, name)
+        else:
+            await ctx.respond(f"The ticket message was not found. Please {self.bot.get_cmd('ticket setup')} First!",
+                              ephemeral=True, delete_after=10)
+
+    @ticket.command(description="Remove a ticket option")
+    async def remove(self, ctx, name: Option(str, autocomplete=basic_autocomplete(get_ticket))):
+        await ctx.defer(ephemeral=True)
+        ticket_message = await db.get_message(ctx.guild.id)
+        if ticket_message:
+            try:
+                message = await ctx.channel.fetch_message(ticket_message)
+                await db.remove_option(ctx.guild.id,
+                                     name)
+                for option in t_options:
+                    if option.label == name:
+                        t_options.remove(option)
+                view = TutorialSelect()
+                await message.edit(view=view)
+                await ctx.respond("The option was removed successfully.", ephemeral=True)
+            except Exception as e:
+                await ctx.respond(f"An error occurred: {e}", ephemeral=True)
+        else:
+            await ctx.respond(f"The ticket message was not found. Please {self.bot.get_cmd('ticket setup')} First!", ephemeral=True, delete_after=10)
+
+
 
 
 
@@ -99,36 +367,59 @@ def setup(bot):
     bot.add_cog(Ticket(bot))
 
 
-
-
-class CreateTicket(discord.ui.View):
-    def __init__(self):
+class TicketRole(discord.ui.View):
+    def __init__(self, channel_name, logs_channel_name, category_name):
         super().__init__(timeout=None)
+        self.category_name = category_name
+        self.channel_name = channel_name
+        self.logs_channel_name = logs_channel_name
 
-    @discord.ui.button(label="Create Ticket", style=discord.ButtonStyle.primary, emoji="📨", custom_id="create_ticket")
-    async def button_callback1(self, button, interaction):
-        server_id = interaction.guild.id
+    @discord.ui.role_select(placeholder="Wähle Rollen aus", min_values=1, max_values=1, custom_id="role", row=1)
+    async def role_callback(self, select, interaction):
+        try:
+            teamrole_id = select.values[0].id
+            await db.set_teamrole(interaction.guild.id, teamrole_id)
+            selected_role = interaction.guild.get_role(teamrole_id)
+            role_mention = selected_role.mention if selected_role else "Unknown Role"
+            embed = discord.Embed(
+                title="🎫 Ticket System Setup",
+                description="Welcome to the ticket system setup. Follow the instructions below to configure your ticket system.",
+                color=discord.Color.dark_green()
+            )
+            embed.add_field(name="🔘Open Tickets",
+                            value=f"``{self.category_name}``",
+                            inline=False)
+            embed.add_field(name="🎫 Ticket Channel ", value=f"``{self.channel_name}``", inline=False)
+            embed.add_field(name="📜 Log Channel", value=f"``{self.logs_channel_name}``", inline=False)
+            embed.add_field(name="Great! Now you can select roles that should have access to tickets.",
+                            value=f"The following roles can access tickets: {role_mention}\nClick on Continue afterward.",
+                            inline=False)
+            await interaction.response.edit_message(embed=embed, view=None)
+        except Exception as e:
+            print(f"Error setting teamrole: {e}")
 
-        embed = discord.Embed(
-            title="Create Ticket",
-            description="Choose your ticket",
-            color=discord.Color.blurple()
+
+
+
+
+class TutorialSelect(discord.ui.Select):
+    def __init__(self):
+        super().__init__(
+            min_values=1,
+            max_values=1,
+            placeholder="Triff eine Auswahl",
+            options=t_options
         )
-        await interaction.respond(embed=embed, view=CreateTicketSelect(), ephemeral=True)
-
-
-class CreateTicketSelect(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-
-    @discord.ui.select(
-        custom_id="bro_ich_weiss_nicht",
-        min_values=1,
-        max_values=2,
-        placeholder="Make a selection of your ticket",
-        options=options,
-    )
-    async def ticket_select_callback(self, select, interaction):
+    async def callback(self, select, interaction):
+        guild_id = interaction.guild.id
+        active_options = await db.get_options(guild_id)
+        if active_options:
+            ticket_options = [discord.OptionChoice(name=name, value=name) for name in active_options]
+            self.options = ticket_options
+            await interaction.response.edit_message(view=self)
+        else:
+            print("Keine Optionen aus der Datenbank abgerufen.")
+            return []
         category_id = await db.get_category(interaction.guild.id)
         teamrole_id = await db.get_teamrole(interaction.guild.id)
 
@@ -138,10 +429,8 @@ class CreateTicketSelect(discord.ui.View):
             if category:
                 overwrites = {
                     interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
-                    interaction.user: discord.PermissionOverwrite(view_channel=True, read_message_history=True,
-                                                                  send_messages=True),
-                    interaction.guild.me: discord.PermissionOverwrite(view_channel=True, read_message_history=True,
-                                                                      send_messages=True),
+                    interaction.user: discord.PermissionOverwrite(view_channel=True, read_message_history=True, send_messages=True),
+                    interaction.guild.me: discord.PermissionOverwrite(view_channel=True, read_message_history=True, send_messages=True),
                 }
                 team_role = interaction.guild.get_role(teamrole_id)
                 if team_role:
@@ -149,42 +438,139 @@ class CreateTicketSelect(discord.ui.View):
                 else:
                     topic = f"Ticket for {interaction.user.name}. Contact staff for assistance."
 
-                channel = await category.create_text_channel(name=f"{interaction.user.display_name}",
-                                                             overwrites=overwrites, topic=topic)
+                channel = await category.create_text_channel(
+                    name=f"{select.values[0]}",
+                    overwrites=overwrites,
+                    topic=topic
+                )
 
                 msg = await channel.send(
-                    f"{team_role.mention if team_role else '@staff'} {interaction.user.mention} has opened a ticket.")
+                    f"{team_role.mention if team_role else '@staff'} {interaction.user.mention} has opened a ticket."
+                )
+
+                # Creating the Embed
                 embed = discord.Embed(
-                    title="🎉 Welcome to Customer Support! 🎉",
-                    description="Welcome to our customer support! We sincerely appreciate you taking the time to reach out to us. Your concern is important to us, and we want to ensure that you receive the best possible assistance.\n\nYour ticket has been successfully created, and our dedicated team is standing by to assist you with any questions, issues, or concerns you may have. We understand that you may be awaiting a prompt resolution, and we are committed to responding to you as quickly as possible.\n\nPlease understand that processing your ticket may take some time as we aim to ensure that we provide you with the highest quality support. Your satisfaction is our priority, and we will spare no effort to ensure that your needs are met.\n\nWhile you wait for a response, please rest assured that we have received your message and are working to reply to you as soon as possible. Your patience is greatly appreciated.\n\nFeel free to contact us if you need further assistance or have any questions. Our team is available around the clock and is ready to assist you. We are here to help you and ensure that you have a positive experience.\n\nThank you for trusting our support team and for the opportunity to serve you!",
-                    color=discord.Color.green()
+                    title="🎫 Ticket",
+                    description=f"Hey, {interaction.user.mention}!\n\nHow can we assist you? A moderator will be with you shortly.",
+                    color=discord.Color.blue()
                 )
 
                 await channel.send(embed=embed, view=TicketView())
-                await interaction.response.send_message(f"I've opened a ticket for you at {channel.mention}",
-                                                        ephemeral=True)
+                await interaction.response.send_message(f"I've opened a ticket for you at {channel.mention}", ephemeral=True)
                 return
 
         await interaction.response.send_message(
-            "The category ID is not set in the database or the specified category doesn't exist.", ephemeral=True)
+            "The category ID is not set in the database or the specified category doesn't exist.", ephemeral=True
+        )
+
 
 
 options = [
     discord.SelectOption(label="Add User", description="Add User to ticket", emoji="👥"),
     discord.SelectOption(label="Remove User", description="Remove a user from ticket",
                          emoji="<:redcross:758380151238033419>"),
-
+    discord.SelectOption(label="Do you still have questions?",
+                         description="Ask the user if they have any further questions", emoji="❓")
 ]
+
+
+class QuestionsButton(discord.ui.View):
+    def __init__(self, ticket_owner):
+        super().__init__(timeout=None)
+        self.ticket_owner = ticket_owner
+        self.button_clicked = False
+
+    @discord.ui.button(label="Have questions", emoji="<:Haken:1231162694854246410>", row=1, custom_id="yes")
+    async def yes_button(self, button, interaction):
+        ticket_owner_name = interaction.channel.topic.split("Ticket for ")[1].split(".")[0]
+        ticket_owner = discord.utils.get(interaction.guild.members, name=ticket_owner_name)
+
+        if not ticket_owner:
+            await interaction.response.send_message("❌ Ticket owner not found.", ephemeral=True)
+            return
+
+        if self.button_clicked:
+            await interaction.response.send_message("You have already clicked the button.", ephemeral=True)
+            return
+
+        embed = discord.Embed(
+            title=f"👋 Hi {ticket_owner.display_name}",
+            description=f"🎫 Hi {ticket_owner.display_name}, the ticket will be automatically deleted in ⏰ **24 hours**. \n Thank you for trusting the ``ticket team``. If you have any questions, feel free to ask!",
+            color=discord.Color.blue()
+        )
+        await interaction.response.send_message(embed=embed)
+
+        self.button_clicked = True
+
+    @discord.ui.button(label="No I have not", style=discord.ButtonStyle.blurple,
+                       emoji="<:Loeschen:1231184154427920465>", row=1, custom_id="close_ticket")
+    async def no_ticket(self, button, interaction):
+        ticket_owner_name = interaction.channel.topic.split("Ticket for ")[1].split(".")[0]
+        ticket_owner = discord.utils.get(interaction.guild.members, name=ticket_owner_name)
+
+        if not ticket_owner:
+            await interaction.response.send_message("❌ Ticket owner not found.", ephemeral=True)
+            return
+
+        server_id = interaction.guild.id
+
+        embed = discord.Embed(
+            title="Close Ticket",
+            description="Deleting Ticket in less than `10 Seconds`... ⏳\n\n"
+                        "_If not, you can do it manually!_",
+            color=discord.Color.dark_red()
+        )
+
+        await interaction.response.edit_message(view=self)
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+        transcript = await chat_exporter.export(interaction.channel)
+
+        if transcript is None:
+            return
+
+        transcript_file = discord.File(
+            io.BytesIO(transcript.encode()),
+            filename=f"transcript-{interaction.channel.name}.html",
+        )
+
+        if ticket_owner and not ticket_owner.dm_channel:
+            log_channel_id = await db.get_logs_channel(server_id)
+            log_channel = interaction.guild.get_channel(log_channel_id)
+
+            if log_channel:
+                message = await log_channel.send(file=transcript_file)
+                link = await chat_exporter.link(message)
+                embed = discord.Embed(
+                    title="Your Ticket has been Closed",
+                    description=f"Your ticket at **{interaction.guild.name}** has been closed.\n"
+                                f"Ticket Channel: ```{interaction.channel.name}```\n\n"
+                                f"You can find the **transcript** [here]({link}).\n\n",
+                    color=discord.Color.blue()
+                )
+                embed.timestamp = datetime.utcnow()
+                await ticket_owner.send(embed=embed)
+
+        await asyncio.sleep(5)
+        await interaction.channel.delete()
 
 
 class TicketView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.button_pressed = False
+        self.clicked = False
 
     @discord.ui.button(label="Ticket accepted", style=discord.ButtonStyle.green, emoji="🗂️", row=1,
                        custom_id="accepted_button")
     async def accept_ticket(self, button, interaction):
+        # Überprüfen, ob der Button bereits geklickt wurde
+        if self.clicked:
+            await interaction.response.send_message("You have already accepted the ticket.", ephemeral=True)
+            return
+
+        button.disabled = True
+        self.clicked = True
+
         team_role_id = await db.get_teamrole(interaction.guild.id)
         if team_role_id is None:
             await interaction.response.send_message(
@@ -201,76 +587,60 @@ class TicketView(discord.ui.View):
             await interaction.response.send_message("You are not authorized to accept this ticket.", ephemeral=True)
             return
 
-        if self.button_pressed:
-            await interaction.response.send_message("You have already accepted the ticket.", ephemeral=True)
-            return
-
         await interaction.response.defer()
         member = interaction.user
         embed = discord.Embed(
-            title="Ticket accepted",
-            description=f"{member.mention} will now attend to your request!",
+            title="<a:Prozess:1231185270502588467> | Ticket accepted",
+            description=f"<a:Prozess:1231185270502588467> | {member.mention} will now attend to your request!",
             color=discord.Color.blue()
         )
         await interaction.followup.send(embed=embed)
 
-        self.button_pressed = True
-
     @discord.ui.button(label="Close", style=discord.ButtonStyle.blurple, emoji="🔐", row=1, custom_id="close_ticket")
     async def close_ticket(self, button, interaction):
-        team_role_id = await db.get_teamrole(interaction.guild.id)
-        if team_role_id in [role.id for role in interaction.user.roles]:
-            server_id = interaction.guild.id
+        server_id = interaction.guild.id
 
-            embed = discord.Embed(
-                title="Close Ticket",
-                description="Deleting Ticket in less than `5 Seconds`... ⏳\n\n"
-                            "_If not, you can do it manually!_",
-                color=discord.Color.dark_red()
-            )
+        embed = discord.Embed(
+            title="Close Ticket",
+            description="Deleting Ticket in less than `10 Seconds`... ⏳\n\n"
+                        "_If not, you can do it manually!_",
+            color=discord.Color.dark_red()
+        )
 
-            await interaction.response.edit_message(view=self)
-            await interaction.followup.send(embed=embed)
+        await interaction.response.edit_message(view=self)
+        await interaction.followup.send(embed=embed)
 
-            transcript = await chat_exporter.export(interaction.channel)
+        transcript = await chat_exporter.export(interaction.channel)
 
-            if transcript is None:
-                return
+        if transcript is None:
+            return
 
-            transcript_file = discord.File(
-                io.BytesIO(transcript.encode()),
-                filename=f"transcript-{interaction.channel.name}.html",
-            )
+        transcript_file = discord.File(
+            io.BytesIO(transcript.encode()),
+            filename=f"transcript-{interaction.channel.name}.html",
+        )
+
+        ticket_owner_name = interaction.channel.topic.split("Ticket for ")[1].split(".")[0]
+        ticket_owner = discord.utils.get(interaction.guild.members, name=ticket_owner_name)
+
+        if ticket_owner and not ticket_owner.dm_channel:
             log_channel_id = await db.get_logs_channel(server_id)
-            log_channel = interaction.client.get_channel(log_channel_id)
+            log_channel = interaction.guild.get_channel(log_channel_id)
 
-            message = await log_channel.send(file=transcript_file)
-            link = await chat_exporter.link(message)
+            if log_channel:
+                message = await log_channel.send(file=transcript_file)
+                link = await chat_exporter.link(message)
 
-            topic = interaction.channel.topic
-            ticket_owner_name = topic.split("Ticket for ")[1].split(".")[0]
-
-            ticket_owner = discord.utils.get(interaction.guild.members, name=ticket_owner_name)
-
-            if ticket_owner:
                 userembed = discord.Embed(
                     title="Your ticket has been closed",
                     description=f"Your ticket has been closed.\n"
-                                f"```{interaction.channel.name}```\n"
                                 f"You can find the transcript [here]({link}).",
                     color=discord.Color.blue(),
                 )
                 await ticket_owner.send(embed=userembed)
 
-            await asyncio.sleep(5)
-            await interaction.channel.delete()
-        else:
-            embed = discord.Embed(
-                title="Unauthorized",
-                description=f"You do not have the necessary role  close tickets.",
-                color=discord.Color.red()
-            )
-            await interaction.response.send_message(embed=embed)
+        await asyncio.sleep(5)
+        await interaction.channel.delete()
 
     @discord.ui.select(
         custom_id="ticket_actions",
@@ -285,14 +655,33 @@ class TicketView(discord.ui.View):
 
         user_roles = [role.id for role in interaction.user.roles]
 
-        if teamrole_id in user_roles:
-            selected_options = interaction.data['values']
-            channel = interaction.channel
-            await interaction.message.edit(view=self)
-            if "Add User" in selected_options:
-                await interaction.response.send_modal(AddUserModal())
-            elif "Remove User" in selected_options:
-                await interaction.response.send_modal(RemoveUserModal())
+        if teamrole_id not in user_roles:
+            await interaction.response.send_message("You don't have the required role to perform this action.",
+                                                    ephemeral=True)
+            return
+
+        selected_options = interaction.data.get('values', [])
+        channel = interaction.channel
+        await interaction.message.edit(view=self)
+
+        if "Add User" in selected_options:
+            await interaction.response.send_modal(AddUserModal())
+        elif "Remove User" in selected_options:
+            await interaction.response.send_modal(RemoveUserModal())
+
+        if "Do you still have questions?" in selected_options:
+            ticket_owner_name = interaction.channel.topic.split("Ticket for ")[1].split(".")[0]
+            ticket_owner = discord.utils.get(interaction.guild.members, name=ticket_owner_name)
+
+            if ticket_owner:
+                embed = discord.Embed(
+                    title=f"<:Winken:1231183939910107146> Hi {ticket_owner.display_name}",
+                    description=f"<:Ticket:1231183941952868382> Hi {ticket_owner.display_name}, the ticket will be automatically deleted in  ⏰ **24 hours**. \n Thank you for trusting the ``ticket team``. If you have any questions, feel free to ask!",
+                    color=discord.Color.blue()
+                )
+                await interaction.response.send_message(embed=embed, view=QuestionsButton(ticket_owner))
+            else:
+                await interaction.response.send_message("❌ Ticket owner not found.", ephemeral=True)
 
 
 class AddUserModal(discord.ui.Modal):

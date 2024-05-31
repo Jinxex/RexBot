@@ -52,7 +52,7 @@ class ModerationSystem(commands.Cog):
         kick_embed.set_author(name=f"{ctx.guild.name}", icon_url=member.avatar.url)
         kick_embed.set_thumbnail(url=member.avatar.url)
         kick_embed.set_footer(text=f"{ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                              icon_url=ctx.author.display_avatar.url)
+                              icon_url=ctx.author.display_avatar)
 
         try:
             await member.kick(reason=reason)
@@ -67,13 +67,15 @@ class ModerationSystem(commands.Cog):
             error_embed.add_field(name=f"An error occurred while kicking {member.mention}.",
                                   value=f"Please try again later.", inline=False)
             error_embed.add_field(name=f"Error Code:", value=f"```{e}```", inline=False)
-            error_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.author.display_avatar.url)
+            error_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.author.display_avatar)
             error_embed.set_footer(text=f"{ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                                   icon_url=ctx.author.display_avatar.url)
+                                   icon_url=ctx.author.display_avatar)
 
             print(e)
+            await ctx.defer()
             await ctx.respond(embed=error_embed, ephemeral=True)
             return
+        await ctx.defer()
         await ctx.respond(embed=kick_embed, ephemeral=False)
 
     @slash_command(description="Ban a user from the server")
@@ -98,7 +100,7 @@ class ModerationSystem(commands.Cog):
         ban_embed.set_author(name=f"{ctx.guild.name}", icon_url=member.avatar.url)
         ban_embed.set_thumbnail(url=member.avatar.url)
         ban_embed.set_footer(text=f"{ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                             icon_url=ctx.author.display_avatar.url)
+                             icon_url=ctx.author.display_avatar)
 
         try:
             await member.ban(reason=reason)
@@ -113,13 +115,15 @@ class ModerationSystem(commands.Cog):
             error_embed.add_field(name=f"An error occurred while banning {member.mention}.",
                                   value=f"Please try again later.", inline=False)
             error_embed.add_field(name=f"Error Code:", value=f"```{e}```", inline=False)
-            error_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.author.display_avatar.url)
+            error_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.author.display_avatar)
             error_embed.set_footer(text=f"{ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                                   icon_url=ctx.author.display_avatar.url)
+                                   icon_url=ctx.author.display_avatar)
 
             print(e)
+            await ctx.defer()
             await ctx.respond(embed=error_embed, ephemeral=True)
             return
+        await ctx.defer()
         await ctx.respond(embed=ban_embed, ephemeral=False)
 
     @slash_command(description="Unban a user from the server")
@@ -144,7 +148,7 @@ class ModerationSystem(commands.Cog):
         unban_embed.set_author(name=f"{ctx.guild.name}", icon_url=member.avatar.url)
         unban_embed.set_thumbnail(url=member.avatar.url)
         unban_embed.set_footer(text=f"{ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                               icon_url=ctx.author.display_avatar.url)
+                               icon_url=ctx.author.display_avatar)
 
         try:
             ban_entry = await ctx.guild.fetch_ban(member)
@@ -160,13 +164,15 @@ class ModerationSystem(commands.Cog):
             error_embed.add_field(name=f"An error occurred while unbanning {member.mention}.",
                                   value=f"Please try again later.", inline=False)
             error_embed.add_field(name=f"Error Code:", value=f"```{e}```", inline=False)
-            error_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.author.display_avatar.url)
+            error_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.author.display_avatar)
             error_embed.set_footer(text=f"{ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                                   icon_url=ctx.author.display_avatar.url)
+                                   icon_url=ctx.author.display_avatar)
 
             print(e)
+            await ctx.defer()
             await ctx.respond(embed=error_embed, ephemeral=True)
             return
+        await ctx.defer()
         await ctx.respond(embed=unban_embed, ephemeral=False)
 
     @slash_command(description="Warn a user from the server")
@@ -207,7 +213,7 @@ class ModerationSystem(commands.Cog):
         warnUser_embed.set_author(name=f"{ctx.guild.name}", icon_url=member.avatar.url)
         warnUser_embed.set_thumbnail(url=member.avatar.url)
         warnUser_embed.set_footer(text=f"{ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                                  icon_url=ctx.author.display_avatar.url)
+                                  icon_url=ctx.author.display_avatar)
 
         warn_embed = discord.Embed(
             title="`✅` Warn",
@@ -221,9 +227,10 @@ class ModerationSystem(commands.Cog):
         warn_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.user.avatar.url)
         warn_embed.set_thumbnail(url=member.avatar.url)
         warn_embed.set_footer(text=f"{ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                              icon_url=ctx.author.display_avatar.url)
-
+                              icon_url=ctx.author.display_avatar)
+        await ctx.defer()
         await member.send(embed=warnUser_embed)
+        await ctx.defer()
         await ctx.respond(embed=warn_embed, ephemeral=False)
 
     @slash_command(description="Unwarn a user from the server")
@@ -247,10 +254,10 @@ class ModerationSystem(commands.Cog):
         unwarnUser_embed.add_field(name="Moderator:", value=f"```{ctx.author}```", inline=False)
         unwarnUser_embed.add_field(name="Warn ID:", value=f"```{warn_id}```", inline=False)
         unwarnUser_embed.add_field(name="Reason:", value=f"```{reason}```", inline=False)
-        unwarnUser_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.author.display_avatar.url)
-        unwarnUser_embed.set_thumbnail(url=ctx.guild.icon.url)
+        unwarnUser_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.author.display_avatar)
+        unwarnUser_embed.set_thumbnail(url=ctx.guild.icon)
         unwarnUser_embed.set_footer(text=f"{ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                                    icon_url=ctx.author.display_avatar.url)
+                                    icon_url=ctx.author.display_avatar)
 
         unwarn_embed = discord.Embed(
             title=f"`✅` Unwarn",
@@ -261,10 +268,10 @@ class ModerationSystem(commands.Cog):
         unwarn_embed.add_field(name="Moderator:", value=f"```{ctx.author}```", inline=False)
         unwarn_embed.add_field(name="Warn ID:", value=f"```{warn_id}```", inline=False)
         unwarn_embed.add_field(name="Reason:", value=f"```{reason}```", inline=False)
-        unwarn_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.author.display_avatar.url)
+        unwarn_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.author.display_avatar)
         unwarn_embed.set_thumbnail(url=member.avatar.url)
         unwarn_embed.set_footer(text=f"{ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                                icon_url=ctx.author.display_avatar.url)
+                                icon_url=ctx.author.display_avatar)
 
         async with aiosqlite.connect("mod_sys.db") as db:
             await db.execute(
@@ -272,8 +279,9 @@ class ModerationSystem(commands.Cog):
                 (member.id, ctx.guild.id, warn_id)
             )
             await db.commit()
-
+        await ctx.defer()
         await member.send(embed=unwarnUser_embed)
+        await ctx.defer()
         await ctx.respond(embed=unwarn_embed, ephemeral=False)
 
     @slash_command(description="Show all warns of a user from the server")
@@ -310,11 +318,12 @@ class ModerationSystem(commands.Cog):
                 timestamp=datetime.datetime.utcnow()
             )
         warnings_embed.add_field(name="", value="".join(warns_info), inline=False)
-        warnings_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
-        warnings_embed.set_thumbnail(url=member.avatar.url)
+        warnings_embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon)
+        warnings_embed.set_thumbnail(url=member.avatar)
         warnings_embed.set_footer(text=f"{ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                                  icon_url=ctx.author.display_avatar.url)
+                                  icon_url=ctx.author.display_avatar)
 
+        await ctx.defer()
         await ctx.respond(embed=warnings_embed, ephemeral=False)
 
     @slash_command(description="Delete messages from the channel")
@@ -329,10 +338,11 @@ class ModerationSystem(commands.Cog):
                 color=discord.Color.red(),
                 timestamp=datetime.datetime.utcnow()
             )
-            error_embed.set_thumbnail(url=ctx.guild.icon.url)
+            error_embed.set_thumbnail(url=ctx.guild.icon)
             error_embed.set_footer(text=f"| {ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                                   icon_url=ctx.author.display_avatar.url)
-            error_embed.set_author(name=f"Purge | Moderation System", icon_url=ctx.author.display_avatar.url)
+                                   icon_url=ctx.author.display_avatar)
+            error_embed.set_author(name=f"Purge | Moderation System", icon_url=ctx.author.display_avatar)
+            await ctx.defer()
 
             await ctx.respond(embed=error_embed, delete_after=6, ephemeral=True)
         else:
@@ -344,11 +354,11 @@ class ModerationSystem(commands.Cog):
                 color=discord.Color.green(),
                 timestamp=datetime.datetime.utcnow()
             )
-            success_embed.set_thumbnail(url=ctx.guild.icon.url)
+            success_embed.set_thumbnail(url=ctx.guild.icon)
             success_embed.set_footer(text=f"| {ctx.bot.user.name}#{ctx.bot.user.discriminator}",
-                                     icon_url=ctx.author.display_avatar.url)
-            success_embed.set_author(name=f"Purge | Moderation System", icon_url=ctx.author.display_avatar.url)
-
+                                     icon_url=ctx.author.display_avatar)
+            success_embed.set_author(name=f"Purge | Moderation System", icon_url=ctx.author.display_avatar)
+            await ctx.defer()
             await ctx.respond(embed=success_embed, delete_after=3, ephemeral=True)
 
 

@@ -7,7 +7,7 @@ from discord.commands import slash_command
 
 class TempvoiceDatabase(ezcord.DBHandler):
     def __init__(self):
-        super().__init__("db/tempvoice.db")
+        super().__init__("database/tempvoice.db")
 
     async def setup(self):
         await self.exec("""

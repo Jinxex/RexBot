@@ -11,7 +11,7 @@ import re
 class Giveaway(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = "db/giveaway.db"
+        self.db = "database/giveaway.db"
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -91,7 +91,7 @@ class Modal(discord.ui.Modal):
         await asyncio.sleep(time)
         participants = 0
 
-        async with aiosqlite.connect("db/giveaway.db") as db:
+        async with aiosqlite.connect("database/giveaway.database") as db:
             async with db.execute(
                     """
                     SELECT user_id FROM giveaway
@@ -141,7 +141,7 @@ class GvwButton(discord.ui.View):
 
     @discord.ui.button(label="🎉 Join Giveaway", style=discord.ButtonStyle.green, custom_id="join_giveaway")
     async def button_callback(self, button, interaction:discord.Interaction):
-        async with aiosqlite.connect("db/giveaway.db") as db:
+        async with aiosqlite.connect("database/giveaway.database") as db:
             async with db.execute("SELECT user_id FROM giveaway WHERE giveaway_id = ? AND user_id = ?",
                                   (self.msg, interaction.user.id)) as cursor:
                 ids = await cursor.fetchall()
@@ -156,7 +156,7 @@ class GvwButton(discord.ui.View):
             embed.set_footer(text=f"🎉 Giveaway hosted by {interaction.user.name}")
             await self.msg2.edit(embed=embed, view=None)
             await interaction.response.send_message("🎉 You joined the Giveaway!", ephemeral=True)
-            async with aiosqlite.connect("db/giveaway.db") as db:
+            async with aiosqlite.connect("database/giveaway.database") as db:
                 await db.execute("""
                 INSERT INTO giveaway(user_id, giveaway_id)
                 VALUES (?,?)
@@ -180,7 +180,7 @@ class LeaveButton(discord.ui.View):
         embed.set_footer(text=f"🎉 Giveaway hosted by {interaction.user.name}")
         await self.msg2.edit(embed=embed, view=None)
         await interaction.response.send_message("🚫 Left Giveaway.", ephemeral=True)
-        async with aiosqlite.connect("db/giveaway.db") as db:
+        async with aiosqlite.connect("database/giveaway.database") as db:
             await db.execute("""
             DELETE FROM giveaway WHERE user_id = ? and giveaway_id = ?
             """, (interaction.user.id, self.msg))
