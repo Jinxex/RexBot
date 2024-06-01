@@ -21,7 +21,6 @@ bot = ezcord.Bot(
 
 
 
-
 with open("en.yaml", encoding="utf-8") as file:
     en = yaml.safe_load(file)
 
