@@ -1,7 +1,0 @@
-general:
-  bug:
-    name: fehler
-    description: Sende dem Besitzer eine Direktnachricht über den Fehler!
-    options:
-      reason:
-        description: Bitte geben Sie den Grund für den Fehler an.

@@ -7,9 +7,7 @@ class Report(commands.Cog):
         self.bot = bot
         self.owner_id = 817435791079768105
 
-    @slash_command(
-        description="Send a DM owner report about the bot!"
-    )
+    @slash_command()
     @discord.guild_only()
     @commands.cooldown(1, 86400, commands.BucketType.user)
     async def bug(self, ctx, reason: str, img: Option(discord.Attachment, description="Attach an image (optional)")): # type: ignore

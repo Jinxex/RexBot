@@ -193,7 +193,6 @@ class Ticket(ezcord.Cog, emoji="🎫"):
         logs_channel_name = logs.name
         channel_name = ticket_channel.name
 
-        # Get options for this guild from the database
         options = await db.get_options(guild_id)
         t_options = [discord.SelectOption(label=option, emoji="🎫") for option in options]
 
@@ -325,7 +324,8 @@ class Ticket(ezcord.Cog, emoji="🎫"):
                 message = await ctx.channel.fetch_message(ticket_message)
                 select = TutorialSelect()
                 select.append_option(discord.SelectOption(label=name, emoji=emoji))
-                view = discord.ui.View()
+                print(select)
+                view = discord.ui.View(timeout=None)
                 view.add_item(select)
                 await message.edit(view=view)
                 await ctx.respond("The option was added successfully.", ephemeral=True)
@@ -411,6 +411,7 @@ class TutorialSelect(discord.ui.Select):
             options=t_options
         )
     async def callback(self, select, interaction):
+
         guild_id = interaction.guild.id
         active_options = await db.get_options(guild_id)
         if active_options:
