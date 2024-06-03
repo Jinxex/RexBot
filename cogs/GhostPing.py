@@ -1,4 +1,5 @@
 import discord
+from discord import Interaction
 from discord.ext import commands, tasks
 import asyncio
 import ezcord
@@ -41,13 +42,13 @@ class GhostDB(ezcord.DBHandler):
     async def delete_bot_settings(self, guild_id):
         await self.execute("DELETE FROM ghost_ping WHERE guild_id = ?", (guild_id,))
 
-
     async def set_afk_channel(self, guild_id, channel_id):
         await self.execute("UPDATE ghost_ping SET channel_id = ? WHERE guild_id = ?", (channel_id, guild_id))
 
     async def get_channel_id(self, guild_id):
         result = await self.one("SELECT channel_id FROM ghost_ping WHERE guild_id = ?", (guild_id,))
         return result[0] if result else None
+
     async def set_afk_status(self, user_id, is_afk, afk_until):
         await self.execute(
             "INSERT INTO afk_status (user_id, is_afk, afk_until) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET is_afk = ?, afk_until = ?",
@@ -57,11 +58,9 @@ class GhostDB(ezcord.DBHandler):
         result = await self.one("SELECT * FROM afk_status WHERE user_id = ?", (user_id,))
         return {"user_id": result[0], "is_afk": result[1], "afk_until": result[2]} if result else None
 
-
-
-
-
-
+    async def get_afk_status(self, user_id):
+        result = await self.one("SELECT * FROM afk_status WHERE user_id = ?", (user_id,))
+        return {"user_id": result[0], "is_afk": result[1], "afk_until": result[2]} if result else None
 
 
 db = GhostDB()
@@ -72,8 +71,6 @@ class GhostPing(commands.Cog):
         self.bot = bot
 
     ghost = SlashCommandGroup("ghost", default_member_permissions=discord.Permissions(administrator=True))
-
-
     ghost_afk = SlashCommandGroup("ghost_afk")
 
     @commands.Cog.listener()
@@ -113,6 +110,7 @@ class GhostPing(commands.Cog):
         if message.author.bot:
             return
 
+        # Check if mentioned users are AFK
         if message.mentions:
             for mentioned_user in message.mentions:
                 afk_status = await db.check_afk_status(mentioned_user.id)
@@ -120,33 +118,24 @@ class GhostPing(commands.Cog):
                     await message.delete()
 
                     embed = discord.Embed(
-                        title="AFK-Benachrichtigung",
-                        description=f"{mentioned_user.mention} ist derzeit AFK und kann nicht gepingt werden.",
+                        title="AFK Notification",
+                        description=f"{mentioned_user.mention} is currently AFK and cannot be pinged.",
                         color=discord.Color.red()
                     )
                     embed.add_field(
-                        name="Benutzer, der gepingt hat:",
+                        name="User who pinged:",
                         value=f"{message.author.mention}",
                         inline=False
                     )
 
                     await message.channel.send(content=f"{message.author.mention}", embed=embed)
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
-        if message.author.bot:
-            return
 
-        # Check if the user is in AFK status
         afk_status = await db.check_afk_status(message.author.id)
         if afk_status and afk_status["is_afk"] == 1:
-            # Remove the user from AFK status
             await db.set_afk_status(message.author.id, 0, None)
-
-            # Delete all data of the user from the database
             await db.execute("DELETE FROM afk_status WHERE user_id =?", (message.author.id,))
 
-            # Notify the user that their AFK status has been removed
             embed = discord.Embed(
                 title="AFK Status Removed",
                 description=f"{message.author.mention}, your AFK status has been removed and all your data has been deleted because you sent a message.",
@@ -164,7 +153,7 @@ class GhostPing(commands.Cog):
             description=f"Currently, the anti ghost ping system is {'**enabled**' if check_settings['status'] == 0 else '**disabled**'}. To {'**turn it off**' if check_settings['status'] == 0 else '**turn it on**'}, press the button below.",
             color=discord.Colour.blurple()
         )
-        emb.set_footer(icon_url=ctx.guild.icon, text=f"{ctx.guild.name}")
+        emb.set_footer(icon_url=ctx.guild.icon.url, text=f"{ctx.guild.name}")
         await ctx.respond(embed=emb, view=GhostPingButtons(check_settings), ephemeral=True)
 
     @ghost.command(description="Disable the ghost ping system!")
@@ -177,31 +166,35 @@ class GhostPing(commands.Cog):
         )
         await ctx.respond(embed=emb, ephemeral=True)
 
-
-
     @ghost_afk.command(description="Set your AFK status")
-    async def set(self, ctx: discord.ApplicationContext, time: str, *, reason: str):
-        afk_until = datetime.utcnow() + timedelta(minutes=int(time))
-        await db.set_afk_status(ctx.author.id, 1, afk_until)
+    async def set(self, ctx: discord.ApplicationContext, ):
+        afk_status = await db.check_afk_status(ctx.author.id)
+        if afk_status and afk_status["is_afk"] == 1:
+            emb = discord.Embed(
+                title="👋 | AFK status error",
+                description="You are already AFK. You cannot set your AFK status again until you return.",
+                color=discord.Colour.red()
+            )
+            await ctx.respond(embed=emb, ephemeral=True, view=DisableAfk())
+            return
 
         emb = discord.Embed(
-            title="👋 | AFK status set",
-            description=f"Your AFK status has been set. You will be marked as AFK for the next {time} minutes.\n\n**Reason:** {reason}",
-            color=discord.Colour.green()
+            title="👋 | Welcome to the AFK status setup",
+            description="You are about to set your AFK status. Please confirm the following information.",
+            color=discord.Colour.orange()
         )
         await ctx.respond(embed=emb, ephemeral=True)
 
-
 def setup(bot):
     bot.add_cog(GhostPing(bot))
+
 
 class GhostPingButtons(discord.ui.View):
     def __init__(self, check_settings):
         super().__init__(timeout=None)
         self.check_settings = check_settings
 
-    @discord.ui.button(label="Toggle Ghost ping system", style=discord.ButtonStyle.blurple,
-                       custom_id="toggle_ghost_ping", row=1)
+    @discord.ui.button(label="Toggle Ghost ping system", style=discord.ButtonStyle.blurple, custom_id="toggle_ghost_ping", row=1)
     async def toggle_ghost_ping(self, button, interaction):
         new_status = 0 if self.check_settings["status"] != 0 else 1
         await db.update_bot_settings(interaction.guild.id, new_status)
@@ -221,6 +214,39 @@ class GhostPingButtons(discord.ui.View):
             color=discord.Colour.red()
         )
         await interaction.response.edit_message(embed=emb, view=None)
+
+
+
+
+class DisableAfk(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    async def is_afk(self, user_id):
+        afk_status = await db.get_afk_status(user_id)
+        return afk_status
+
+    @discord.ui.button(label="Disable AFK status", style=discord.ButtonStyle.red, custom_id="disable_afk", row=1)
+    async def disable_afk(self, button, interaction):
+        user_id = interaction.user.id
+        is_afk = await self.is_afk(user_id)
+
+        if is_afk:
+            await db.execute("DELETE FROM afk_status WHERE user_id = ?", (user_id,))
+            emb = discord.Embed(
+                title="👋 | AFK status removed",
+                description="Your AFK status has been removed. You can now receive messages again.",
+                color=discord.Colour.green()
+            )
+            await interaction.response.edit_message(embed=emb, view=None)
+        else:
+            emb = discord.Embed(
+                title="⚠️ | Not AFK",
+                description="You are not currently marked as AFK.",
+                color=discord.Colour.orange()
+            )
+            await interaction.response.send_message(embed=emb, ephemeral=True)
+
 
 
 
